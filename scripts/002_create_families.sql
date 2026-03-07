@@ -31,9 +31,26 @@ ALTER TABLE public.families ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.family_members ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.babies ENABLE ROW LEVEL SECURITY;
 
--- Families: members can read their families
+DROP POLICY IF EXISTS "families_select_member" ON public.families;
+DROP POLICY IF EXISTS "families_select_invite" ON public.families;
+DROP POLICY IF EXISTS "families_insert" ON public.families;
+DROP POLICY IF EXISTS "families_update_admin" ON public.families;
+DROP POLICY IF EXISTS "family_members_select" ON public.family_members;
+DROP POLICY IF EXISTS "family_members_insert" ON public.family_members;
+DROP POLICY IF EXISTS "family_members_delete_admin" ON public.family_members;
+DROP POLICY IF EXISTS "family_members_delete_self" ON public.family_members;
+DROP POLICY IF EXISTS "babies_select" ON public.babies;
+DROP POLICY IF EXISTS "babies_insert" ON public.babies;
+DROP POLICY IF EXISTS "babies_update" ON public.babies;
+DROP POLICY IF EXISTS "babies_delete_admin" ON public.babies;
+
+-- Families: members can read their own family
 CREATE POLICY "families_select_member" ON public.families FOR SELECT
   USING (id IN (SELECT family_id FROM public.family_members WHERE user_id = auth.uid()));
+
+-- Families: any authenticated user can look up a family by invite code (needed to join)
+CREATE POLICY "families_select_invite" ON public.families FOR SELECT
+  USING (auth.uid() IS NOT NULL);
 
 -- Families: anyone authenticated can create
 CREATE POLICY "families_insert" ON public.families FOR INSERT

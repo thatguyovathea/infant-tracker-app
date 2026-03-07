@@ -1,0 +1,314 @@
+"use client"
+
+import { useState, useEffect } from "react"
+import { useRouter } from "next/navigation"
+import { createClient } from "@/lib/supabase/client"
+import { getAuthedClient } from "@/lib/supabase/authed-client"
+import { Button } from "@/components/ui/button"
+import { format, subDays, eachDayOfInterval, differenceInMinutes } from "date-fns"
+import { useUnits, kgToLbs, cmToIn, weightLabel, lengthLabel } from "@/lib/units"
+import {
+  BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell,
+  LineChart, Line, Dot
+} from "recharts"
+
+type Range = 7 | 14 | 30
+type Baby = { id: string; name: string }
+type GrowthPoint = { date: string; weight_kg: number | null; height_cm: number | null; head_cm: number | null }
+
+type DayData = {
+  date: string      // "Mon", "Tue" etc or "Mar 1"
+  dateKey: string   // "yyyy-MM-dd"
+  sleepMins: number
+  feedings: number
+  diapers: number
+}
+
+function buildDayMap(range: Range): DayData[] {
+  const today = new Date()
+  const days = eachDayOfInterval({ start: subDays(today, range - 1), end: today })
+  return days.map(d => ({
+    date: range <= 7 ? format(d, "EEE") : format(d, "M/d"),
+    dateKey: format(d, "yyyy-MM-dd"),
+    sleepMins: 0,
+    feedings: 0,
+    diapers: 0,
+  }))
+}
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function CustomTooltip({ active, payload, label, unit }: any) {
+  if (!active || !payload?.length) return null
+  return (
+    <div className="bg-background border rounded-lg px-3 py-2 shadow-md text-xs">
+      <p className="font-medium mb-1">{label}</p>
+      <p>{payload[0].value}{unit}</p>
+    </div>
+  )
+}
+
+export default function TrendsPage() {
+  const router = useRouter()
+  const [range, setRange] = useState<Range>(7)
+  const [babies, setBabies] = useState<Baby[]>([])
+  const [selectedBabyId, setSelectedBabyId] = useState<string | null>(null)
+  const [data, setData] = useState<DayData[]>([])
+  const [loading, setLoading] = useState(true)
+  const [familyId, setFamilyId] = useState<string | null>(null)
+  const [growthData, setGrowthData] = useState<GrowthPoint[]>([])
+
+  useEffect(() => {
+    async function init() {
+      const supabase = createClient()
+      const { data: { session } } = await supabase.auth.getSession()
+      if (!session) { router.replace("/login"); return }
+      const client = await getAuthedClient()
+      if (!client) { router.replace("/login"); return }
+      const { data: m } = await client.from("family_members").select("family_id").eq("user_id", session.user.id).limit(1).maybeSingle()
+      if (!m) { router.replace("/onboarding"); return }
+      setFamilyId(m.family_id)
+      const { data: babiesData } = await client.from("babies").select("id, name").eq("family_id", m.family_id).order("created_at")
+      setBabies(babiesData ?? [])
+    }
+    init()
+  }, [router])
+
+  useEffect(() => {
+    if (!familyId) return
+    async function fetch() {
+      setLoading(true)
+      const client = await getAuthedClient()
+      if (!client) return
+      const from = subDays(new Date(), range - 1)
+      from.setHours(0, 0, 0, 0)
+      const fromISO = from.toISOString()
+
+      let feedQ = client.from("feeding_logs").select("started_at, baby_id").eq("family_id", familyId!).gte("started_at", fromISO)
+      let sleepQ = client.from("sleep_logs").select("started_at, ended_at, baby_id").eq("family_id", familyId!).gte("started_at", fromISO)
+      let diaperQ = client.from("diaper_logs").select("logged_at, baby_id").eq("family_id", familyId!).gte("logged_at", fromISO)
+
+      if (selectedBabyId) {
+        feedQ = feedQ.eq("baby_id", selectedBabyId)
+        sleepQ = sleepQ.eq("baby_id", selectedBabyId)
+        diaperQ = diaperQ.eq("baby_id", selectedBabyId)
+      }
+
+      let growthQ = client.from("growth_logs")
+        .select("measured_at, weight_kg, height_cm, head_cm")
+        .eq("family_id", familyId!)
+        .gte("measured_at", fromISO)
+        .order("measured_at", { ascending: true })
+      if (selectedBabyId) growthQ = growthQ.eq("baby_id", selectedBabyId)
+
+      const [{ data: feedings }, { data: sleeps }, { data: diapers }, { data: growth }] = await Promise.all([feedQ, sleepQ, diaperQ, growthQ])
+
+      const map = buildDayMap(range)
+      const byKey = Object.fromEntries(map.map(d => [d.dateKey, d]))
+
+      feedings?.forEach(r => {
+        const k = format(new Date(r.started_at), "yyyy-MM-dd")
+        if (byKey[k]) byKey[k].feedings++
+      })
+      diapers?.forEach(r => {
+        const k = format(new Date(r.logged_at), "yyyy-MM-dd")
+        if (byKey[k]) byKey[k].diapers++
+      })
+      sleeps?.forEach(r => {
+        const k = format(new Date(r.started_at), "yyyy-MM-dd")
+        if (!byKey[k]) return
+        const end = r.ended_at ? new Date(r.ended_at) : new Date()
+        byKey[k].sleepMins += differenceInMinutes(end, new Date(r.started_at))
+      })
+
+      setData(map)
+      setGrowthData((growth ?? []).map(r => ({
+        date: format(new Date(r.measured_at), "M/d"),
+        weight_kg: r.weight_kg,
+        height_cm: r.height_cm,
+        head_cm: r.head_cm,
+      })))
+      setLoading(false)
+    }
+    fetch()
+  }, [familyId, range, selectedBabyId])
+
+  const { units } = useUnits()
+  const multipleBabies = babies.length > 1
+
+  function sleepTick(mins: number) {
+    if (mins === 0) return "0"
+    const h = Math.floor(mins / 60), m = mins % 60
+    return h > 0 ? `${h}h${m > 0 ? `${m}m` : ""}` : `${m}m`
+  }
+
+  function sleepLabel(mins: number) {
+    const h = Math.floor(mins / 60), m = mins % 60
+    return h > 0 ? `${h}h ${m}m` : `${m}m`
+  }
+
+  return (
+    <div className="min-h-screen bg-background">
+      <header className="border-b px-4 py-3 flex items-center gap-3">
+        <Button variant="ghost" size="sm" onClick={() => router.back()}>← Back</Button>
+        <h1 className="font-semibold">Trends</h1>
+      </header>
+
+      {/* Range selector */}
+      <div className="border-b px-4 py-2 flex gap-2">
+        {([7, 14, 30] as Range[]).map(r => (
+          <button key={r} onClick={() => setRange(r)}
+            className={`px-3 py-1.5 rounded-full text-sm font-medium transition-colors ${range === r ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground hover:bg-muted/80"}`}>
+            {r}d
+          </button>
+        ))}
+      </div>
+
+      {/* Baby filter */}
+      {multipleBabies && (
+        <div className="border-b px-4 py-2 flex gap-2 overflow-x-auto">
+          <button onClick={() => setSelectedBabyId(null)}
+            className={`px-3 py-1.5 rounded-full text-sm font-medium transition-colors shrink-0 ${selectedBabyId === null ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground hover:bg-muted/80"}`}>
+            All babies
+          </button>
+          {babies.map(b => (
+            <button key={b.id} onClick={() => setSelectedBabyId(b.id)}
+              className={`px-3 py-1.5 rounded-full text-sm font-medium transition-colors shrink-0 ${selectedBabyId === b.id ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground hover:bg-muted/80"}`}>
+              {b.name}
+            </button>
+          ))}
+        </div>
+      )}
+
+      <main className="max-w-lg mx-auto px-4 py-6 space-y-8">
+        {loading ? (
+          <div className="flex items-center justify-center py-16">
+            <p className="text-muted-foreground text-sm">Loading...</p>
+          </div>
+        ) : (
+          <>
+            {/* Sleep */}
+            <div className="space-y-2">
+              <div className="flex items-baseline justify-between">
+                <h2 className="font-semibold">😴 Sleep</h2>
+                <p className="text-xs text-muted-foreground">
+                  Avg {sleepLabel(Math.round(data.reduce((a, d) => a + d.sleepMins, 0) / data.filter(d => d.sleepMins > 0).length || 0))} / day
+                </p>
+              </div>
+              <div className="rounded-xl border bg-card p-4">
+                <ResponsiveContainer width="100%" height={160}>
+                  <BarChart data={data} barSize={range <= 7 ? 28 : range <= 14 ? 16 : 10}>
+                    <XAxis dataKey="date" tick={{ fontSize: 11 }} axisLine={false} tickLine={false} />
+                    <YAxis tickFormatter={sleepTick} tick={{ fontSize: 11 }} axisLine={false} tickLine={false} width={36} />
+                    <Tooltip content={<CustomTooltip unit="" />} formatter={(v: number) => sleepLabel(v)} />
+                    <Bar dataKey="sleepMins" radius={[4, 4, 0, 0]}>
+                      {data.map((_, i) => <Cell key={i} fill="rgb(168 85 247 / 0.6)" />)}
+                    </Bar>
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+            </div>
+
+            {/* Feeding */}
+            <div className="space-y-2">
+              <div className="flex items-baseline justify-between">
+                <h2 className="font-semibold">🍼 Feeding</h2>
+                <p className="text-xs text-muted-foreground">
+                  Avg {(data.reduce((a, d) => a + d.feedings, 0) / data.filter(d => d.feedings > 0).length || 0).toFixed(1)} / day
+                </p>
+              </div>
+              <div className="rounded-xl border bg-card p-4">
+                <ResponsiveContainer width="100%" height={160}>
+                  <BarChart data={data} barSize={range <= 7 ? 28 : range <= 14 ? 16 : 10}>
+                    <XAxis dataKey="date" tick={{ fontSize: 11 }} axisLine={false} tickLine={false} />
+                    <YAxis allowDecimals={false} tick={{ fontSize: 11 }} axisLine={false} tickLine={false} width={24} />
+                    <Tooltip content={<CustomTooltip unit=" feedings" />} />
+                    <Bar dataKey="feedings" radius={[4, 4, 0, 0]}>
+                      {data.map((_, i) => <Cell key={i} fill="rgb(96 165 250 / 0.6)" />)}
+                    </Bar>
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+            </div>
+
+            {/* Diapers */}
+            <div className="space-y-2">
+              <div className="flex items-baseline justify-between">
+                <h2 className="font-semibold">💩 Diapers</h2>
+                <p className="text-xs text-muted-foreground">
+                  Avg {(data.reduce((a, d) => a + d.diapers, 0) / data.filter(d => d.diapers > 0).length || 0).toFixed(1)} / day
+                </p>
+              </div>
+              <div className="rounded-xl border bg-card p-4">
+                <ResponsiveContainer width="100%" height={160}>
+                  <BarChart data={data} barSize={range <= 7 ? 28 : range <= 14 ? 16 : 10}>
+                    <XAxis dataKey="date" tick={{ fontSize: 11 }} axisLine={false} tickLine={false} />
+                    <YAxis allowDecimals={false} tick={{ fontSize: 11 }} axisLine={false} tickLine={false} width={24} />
+                    <Tooltip content={<CustomTooltip unit=" changes" />} />
+                    <Bar dataKey="diapers" radius={[4, 4, 0, 0]}>
+                      {data.map((_, i) => <Cell key={i} fill="rgb(251 191 36 / 0.6)" />)}
+                    </Bar>
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+            </div>
+
+            {/* Growth */}
+            {growthData.length > 0 && (() => {
+              const wUnit = weightLabel(units)
+              const lUnit = lengthLabel(units)
+              const latestWeight = growthData[growthData.length - 1].weight_kg
+              const weightChartData = growthData
+                .filter(d => d.weight_kg != null)
+                .map(d => ({ ...d, weight_val: units === "imperial" ? parseFloat(kgToLbs(d.weight_kg!).toFixed(1)) : d.weight_kg! }))
+              const heightChartData = growthData
+                .filter(d => d.height_cm != null)
+                .map(d => ({ ...d, height_val: units === "imperial" ? parseFloat(cmToIn(d.height_cm!).toFixed(1)) : d.height_cm! }))
+              return (
+                <div className="space-y-2">
+                  <div className="flex items-baseline justify-between">
+                    <h2 className="font-semibold">📏 Little Stats</h2>
+                    {latestWeight != null && (
+                      <p className="text-xs text-muted-foreground">
+                        Latest {units === "imperial" ? `${kgToLbs(latestWeight).toFixed(1)} lbs` : `${latestWeight} kg`}
+                      </p>
+                    )}
+                  </div>
+                  {weightChartData.length > 0 && (
+                    <div className="rounded-xl border bg-card p-4">
+                      <p className="text-xs text-muted-foreground mb-2">Weight ({wUnit})</p>
+                      <ResponsiveContainer width="100%" height={160}>
+                        <LineChart data={weightChartData}>
+                          <XAxis dataKey="date" tick={{ fontSize: 11 }} axisLine={false} tickLine={false} />
+                          <YAxis tick={{ fontSize: 11 }} axisLine={false} tickLine={false} width={36}
+                            domain={["auto", "auto"]} tickFormatter={(v: number) => v.toFixed(1)} />
+                          <Tooltip content={<CustomTooltip unit={` ${wUnit}`} />} />
+                          <Line dataKey="weight_val" type="monotone" stroke="rgb(16 185 129)" strokeWidth={2}
+                            dot={<Dot r={4} fill="rgb(16 185 129)" />} activeDot={{ r: 5 }} />
+                        </LineChart>
+                      </ResponsiveContainer>
+                    </div>
+                  )}
+                  {heightChartData.length > 0 && (
+                    <div className="rounded-xl border bg-card p-4">
+                      <p className="text-xs text-muted-foreground mb-2">Height ({lUnit})</p>
+                      <ResponsiveContainer width="100%" height={160}>
+                        <LineChart data={heightChartData}>
+                          <XAxis dataKey="date" tick={{ fontSize: 11 }} axisLine={false} tickLine={false} />
+                          <YAxis tick={{ fontSize: 11 }} axisLine={false} tickLine={false} width={36}
+                            domain={["auto", "auto"]} tickFormatter={(v: number) => v.toFixed(1)} />
+                          <Tooltip content={<CustomTooltip unit={` ${lUnit}`} />} />
+                          <Line dataKey="height_val" type="monotone" stroke="rgb(99 102 241)" strokeWidth={2}
+                            dot={<Dot r={4} fill="rgb(99 102 241)" />} activeDot={{ r: 5 }} />
+                        </LineChart>
+                      </ResponsiveContainer>
+                    </div>
+                  )}
+                </div>
+              )
+            })()}
+          </>
+        )}
+      </main>
+    </div>
+  )
+}

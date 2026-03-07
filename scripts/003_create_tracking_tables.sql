@@ -7,7 +7,7 @@ CREATE TABLE IF NOT EXISTS public.feeding_logs (
   type TEXT NOT NULL CHECK (type IN ('breast', 'bottle', 'solid')),
   side TEXT CHECK (side IN ('left', 'right', 'both')),
   amount_ml NUMERIC,
-  duration_minutes INTEGER,
+  duration_seconds INTEGER,
   food_name TEXT,
   food_brand TEXT,
   food_barcode TEXT,
@@ -39,13 +39,26 @@ CREATE TABLE IF NOT EXISTS public.diaper_logs (
   logged_by UUID NOT NULL REFERENCES auth.users(id),
   type TEXT NOT NULL CHECK (type IN ('wet', 'dirty', 'both', 'dry')),
   notes TEXT,
-  changed_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  logged_at TIMESTAMPTZ NOT NULL DEFAULT now(),
   created_at TIMESTAMPTZ DEFAULT now()
 );
 
 ALTER TABLE public.feeding_logs ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.sleep_logs ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.diaper_logs ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "feeding_select" ON public.feeding_logs;
+DROP POLICY IF EXISTS "feeding_insert" ON public.feeding_logs;
+DROP POLICY IF EXISTS "feeding_update" ON public.feeding_logs;
+DROP POLICY IF EXISTS "feeding_delete" ON public.feeding_logs;
+DROP POLICY IF EXISTS "sleep_select" ON public.sleep_logs;
+DROP POLICY IF EXISTS "sleep_insert" ON public.sleep_logs;
+DROP POLICY IF EXISTS "sleep_update" ON public.sleep_logs;
+DROP POLICY IF EXISTS "sleep_delete" ON public.sleep_logs;
+DROP POLICY IF EXISTS "diaper_select" ON public.diaper_logs;
+DROP POLICY IF EXISTS "diaper_insert" ON public.diaper_logs;
+DROP POLICY IF EXISTS "diaper_update" ON public.diaper_logs;
+DROP POLICY IF EXISTS "diaper_delete" ON public.diaper_logs;
 
 -- Feeding: family members CRUD
 CREATE POLICY "feeding_select" ON public.feeding_logs FOR SELECT

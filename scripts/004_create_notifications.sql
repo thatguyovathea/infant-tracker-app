@@ -24,6 +24,13 @@ CREATE TABLE IF NOT EXISTS public.push_subscriptions (
 ALTER TABLE public.notifications ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.push_subscriptions ENABLE ROW LEVEL SECURITY;
 
+DROP POLICY IF EXISTS "notifications_select" ON public.notifications;
+DROP POLICY IF EXISTS "notifications_insert" ON public.notifications;
+DROP POLICY IF EXISTS "notifications_update" ON public.notifications;
+DROP POLICY IF EXISTS "push_select_own" ON public.push_subscriptions;
+DROP POLICY IF EXISTS "push_insert_own" ON public.push_subscriptions;
+DROP POLICY IF EXISTS "push_delete_own" ON public.push_subscriptions;
+
 -- Notifications: family members can read
 CREATE POLICY "notifications_select" ON public.notifications FOR SELECT
   USING (family_id IN (SELECT family_id FROM public.family_members WHERE user_id = auth.uid()));
