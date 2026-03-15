@@ -313,6 +313,7 @@ export default function DashboardPage() {
       const newItem: ActivityItem = { id: crypto.randomUUID(), type: "feeding", label: feedingPresetLabel(p), timestamp: feedData.started_at, babyId }
       setActivity(prev => [newItem, ...prev].slice(0, 15))
       setSummaries(prev => prev.map(s => s.babyId === babyId ? { ...s, feedings: s.feedings + 1 } : s))
+      setWeekFeedings(prev => prev.map((d, i) => i === 6 ? { ...d, value: d.value + 1 } : d))
       if (offline) {
         enqueue({ id: crypto.randomUUID(), queuedAt: new Date().toISOString(), operation: "insert", table: "feeding_logs", data: feedData, notification: notifData })
         setPendingCount(c => c + 1)
@@ -359,6 +360,7 @@ export default function DashboardPage() {
         const newItem: ActivityItem = { id: activeSleep.id, type: "sleep", label: `Slept · ${durationStr}`, timestamp: activeSleep.startedAt, babyId }
         setActivity(prev => [newItem, ...prev.filter(i => i.id !== activeSleep.id)].slice(0, 15))
         setSummaries(prev => prev.map(s => s.babyId === babyId ? { ...s, sleepMinutes: s.sleepMinutes + mins } : s))
+        setWeekSleep(prev => prev.map((d, i) => i === 6 ? { ...d, value: Math.round((d.value * 60 + mins) / 6) / 10 } : d))
         setActiveSleep(null); setSleepElapsed("")
         if (offline) {
           enqueue({ id: crypto.randomUUID(), queuedAt: new Date().toISOString(), operation: "update", table: "sleep_logs", rowId: activeSleep.id, data: { ended_at: endedAt }, notification: notifData })
