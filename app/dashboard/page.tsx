@@ -312,6 +312,7 @@ export default function DashboardPage() {
       const notifData = { family_id: familyId, actor_id: logUserId ?? undefined, type: "feeding", title: `${actor} logged a feeding`, body: `${feedingPresetLabel(p)} for ${babyName}` }
       const newItem: ActivityItem = { id: crypto.randomUUID(), type: "feeding", label: feedingPresetLabel(p), timestamp: feedData.started_at, babyId }
       setActivity(prev => [newItem, ...prev].slice(0, 15))
+      setSummaries(prev => prev.map(s => s.babyId === babyId ? { ...s, feedings: s.feedings + 1 } : s))
       if (offline) {
         enqueue({ id: crypto.randomUUID(), queuedAt: new Date().toISOString(), operation: "insert", table: "feeding_logs", data: feedData, notification: notifData })
         setPendingCount(c => c + 1)
@@ -333,6 +334,7 @@ export default function DashboardPage() {
       const notifData = { family_id: familyId, actor_id: logUserId ?? undefined, type: "diaper", title: `${actor} logged a diaper change`, body: `${labelMap[p.type]} for ${babyName}` }
       const newItem: ActivityItem = { id: crypto.randomUUID(), type: "diaper", label: labelMap[p.type], timestamp: diaperData.logged_at, babyId }
       setActivity(prev => [newItem, ...prev].slice(0, 15))
+      setSummaries(prev => prev.map(s => s.babyId === babyId ? { ...s, diapers: s.diapers + 1 } : s))
       if (offline) {
         enqueue({ id: crypto.randomUUID(), queuedAt: new Date().toISOString(), operation: "insert", table: "diaper_logs", data: diaperData, notification: notifData })
         setPendingCount(c => c + 1)
@@ -356,6 +358,7 @@ export default function DashboardPage() {
         const notifData = { family_id: familyId, actor_id: logUserId ?? undefined, type: "sleep", title: `${actor} ended sleep`, body: `${babyName} slept for ${durationStr}` }
         const newItem: ActivityItem = { id: activeSleep.id, type: "sleep", label: `Slept · ${durationStr}`, timestamp: activeSleep.startedAt, babyId }
         setActivity(prev => [newItem, ...prev.filter(i => i.id !== activeSleep.id)].slice(0, 15))
+        setSummaries(prev => prev.map(s => s.babyId === babyId ? { ...s, sleepMinutes: s.sleepMinutes + mins } : s))
         setActiveSleep(null); setSleepElapsed("")
         if (offline) {
           enqueue({ id: crypto.randomUUID(), queuedAt: new Date().toISOString(), operation: "update", table: "sleep_logs", rowId: activeSleep.id, data: { ended_at: endedAt }, notification: notifData })
