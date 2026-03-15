@@ -175,14 +175,14 @@ function SleepEdit({ record, onSave }: { record: any; onSave: () => void }) {
         <CardContent className="space-y-5">
           {error && <p className="text-sm text-destructive bg-destructive/10 px-3 py-2 rounded-md">{error}</p>}
 
-          <div className="grid grid-cols-2 gap-4">
+          <div className="space-y-4">
             <div className="space-y-2">
               <Label>Start time</Label>
-              <Input type="datetime-local" value={startedAt} onChange={e => setStartedAt(e.target.value)} required />
+              <Input type="datetime-local" value={startedAt} onChange={e => setStartedAt(e.target.value)} required className="text-sm appearance-none" />
             </div>
             <div className="space-y-2">
               <Label>End time</Label>
-              <Input type="datetime-local" value={endedAt} onChange={e => setEndedAt(e.target.value)} />
+              <Input type="datetime-local" value={endedAt} onChange={e => setEndedAt(e.target.value)} className="text-sm appearance-none" />
             </div>
           </div>
 

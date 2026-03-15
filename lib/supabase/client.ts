@@ -1,7 +1,10 @@
-import { createClient as createSupabaseClient } from "@supabase/supabase-js"
+import { createClient as createSupabaseClient, SupabaseClient } from "@supabase/supabase-js"
+
+let client: SupabaseClient | null = null
 
 export function createClient() {
-  return createSupabaseClient(
+  if (client) return client
+  client = createSupabaseClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     {
@@ -12,4 +15,5 @@ export function createClient() {
       },
     }
   )
+  return client
 }

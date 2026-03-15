@@ -28,6 +28,7 @@ function SleepForm() {
   const [babies, setBabies] = useState<Baby[]>([])
   const [babyId, setBabyId] = useState("")
   const [familyId, setFamilyId] = useState<string | null>(null)
+  const [displayName, setDisplayName] = useState("")
   const [startedAt, setStartedAt] = useState(toLocalDateTimeValue(now))
   const [endedAt, setEndedAt] = useState("")
   const [quality, setQuality] = useState("good")
@@ -45,10 +46,14 @@ function SleepForm() {
       const { data: m } = await client.from("family_members").select("family_id").eq("user_id", session.user.id).limit(1).maybeSingle()
       if (!m) return
       setFamilyId(m.family_id)
-      const { data: b } = await client.from("babies").select("id, name").eq("family_id", m.family_id).order("created_at")
+      const [{ data: b }, { data: profile }] = await Promise.all([
+        client.from("babies").select("id, name").eq("family_id", m.family_id).order("created_at"),
+        client.from("profiles").select("display_name").eq("id", session.user.id).maybeSingle(),
+      ])
       const list = b ?? []
       setBabies(list)
       if (list.length > 0) setBabyId(list[0].id)
+      setDisplayName(profile?.display_name ?? "Someone")
     }
     load()
   }, [router])
@@ -61,14 +66,22 @@ function SleepForm() {
     const client = await getAuthedClient()
     if (!client) { router.replace("/login"); return }
     const { data: { session } } = await createClient().auth.getSession()
-    const { error } = await client.from("sleep_logs").insert({
+    const endedAtISO = endedAt ? new Date(endedAt).toISOString() : null
+    const { data: sleepRow, error } = await client.from("sleep_logs").insert({
       baby_id: babyId, family_id: familyId, logged_by: session?.user.id,
       started_at: new Date(startedAt).toISOString(),
-      ended_at: endedAt ? new Date(endedAt).toISOString() : null,
+      ended_at: endedAtISO,
       quality,
       notes: notes || null,
-    })
+    }).select("id").single()
     if (error) { setError(error.message); setLoading(false); return }
+    const babyName = babies.find(b => b.id === babyId)?.name ?? "baby"
+    client.from("notifications").insert({
+      family_id: familyId, actor_id: session?.user.id, type: "sleep",
+      title: endedAtISO ? `${displayName} logged sleep` : `${displayName} started sleep`,
+      body: endedAtISO ? `${babyName} slept` : `${babyName} is now sleeping`,
+      reference_id: sleepRow?.id ?? null,
+    }).then(() => {}).catch(err => console.error("[notification]", err))
     router.replace("/dashboard")
   }
 

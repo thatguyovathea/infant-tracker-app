@@ -3,7 +3,7 @@
 import { useState, Suspense } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
 import { createClient } from "@/lib/supabase/client"
-import { createClient as createSupabaseClient } from "@supabase/supabase-js"
+import { getAuthedClient } from "@/lib/supabase/authed-client"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -22,15 +22,30 @@ function AddBabyForm() {
     setError(null)
 
     const formData = new FormData(e.currentTarget)
-    const supabase = createClient()
-    const { data: { session } } = await supabase.auth.getSession()
+    const { data: { session } } = await createClient().auth.getSession()
     if (!session) { router.replace("/login"); return }
 
-    const authedClient = createSupabaseClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-      { global: { headers: { Authorization: `Bearer ${session.access_token}` } } }
-    )
+    const authedClient = await getAuthedClient()
+    if (!authedClient) { router.replace("/login"); return }
+
+    if (!family_id) {
+      setError("Missing family. Please go back and create or join a family first.")
+      setLoading(false)
+      return
+    }
+
+    const { data: membership } = await authedClient
+      .from("family_members")
+      .select("family_id")
+      .eq("user_id", session.user.id)
+      .eq("family_id", family_id)
+      .limit(1)
+      .maybeSingle()
+    if (!membership) {
+      setError("You don't have access to this family. Please create or join a family first.")
+      setLoading(false)
+      return
+    }
 
     const { error } = await authedClient
       .from("babies")

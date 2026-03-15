@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect, Suspense } from "react"
-import { useRouter } from "next/navigation"
+import { useRouter, useSearchParams } from "next/navigation"
 import { createClient } from "@/lib/supabase/client"
 import { getAuthedClient } from "@/lib/supabase/authed-client"
 import { Button } from "@/components/ui/button"
@@ -25,17 +25,21 @@ type Baby = { id: string; name: string }
 
 function FeedingForm() {
   const router = useRouter()
+  const searchParams = useSearchParams()
   const [babies, setBabies] = useState<Baby[]>([])
   const [babyId, setBabyId] = useState("")
   const [familyId, setFamilyId] = useState<string | null>(null)
-  const [feedingType, setFeedingType] = useState("breast")
+  const [displayName, setDisplayName] = useState("")
+  const [feedingType, setFeedingType] = useState(searchParams.get("type") ?? "breast")
   const [side, setSide] = useState("left")
   const [duration, setDuration] = useState("")
   const [amountMl, setAmountMl] = useState("")
-  const [foodName, setFoodName] = useState("")
+  const [foodName, setFoodName] = useState(searchParams.get("food_name") ?? "")
+  const [allergenTags] = useState<string[]>((searchParams.get("allergens") ?? "").split(",").filter(Boolean))
   const [notes, setNotes] = useState("")
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [scanMessage, setScanMessage] = useState(searchParams.get("food_name") ? `Pre-filled: ${searchParams.get("food_name")}` : "")
 
   useEffect(() => {
     async function load() {
@@ -47,10 +51,14 @@ function FeedingForm() {
       const { data: m } = await client.from("family_members").select("family_id").eq("user_id", session.user.id).limit(1).maybeSingle()
       if (!m) return
       setFamilyId(m.family_id)
-      const { data: b } = await client.from("babies").select("id, name").eq("family_id", m.family_id).order("created_at")
+      const [{ data: b }, { data: profile }] = await Promise.all([
+        client.from("babies").select("id, name").eq("family_id", m.family_id).order("created_at"),
+        client.from("profiles").select("display_name").eq("id", session.user.id).maybeSingle(),
+      ])
       const list = b ?? []
       setBabies(list)
       if (list.length > 0) setBabyId(list[0].id)
+      setDisplayName(profile?.display_name ?? "Someone")
     }
     load()
   }, [router])
@@ -63,7 +71,7 @@ function FeedingForm() {
     const client = await getAuthedClient()
     if (!client) { router.replace("/login"); return }
     const { data: { session } } = await createClient().auth.getSession()
-    const { error } = await client.from("feeding_logs").insert({
+    const { data: feedRow, error } = await client.from("feeding_logs").insert({
       baby_id: babyId, family_id: familyId, logged_by: session?.user.id,
       type: feedingType,
       side: feedingType === "breast" ? side : null,
@@ -72,7 +80,7 @@ function FeedingForm() {
       food_name: feedingType === "solid" && foodName ? foodName : null,
       notes: notes || null,
       started_at: new Date().toISOString(),
-    })
+    }).select("id").single()
     if (error) { setError(error.message); setLoading(false); return }
     // Update quick prefs so dashboard one-tap learns from this
     try {
@@ -80,6 +88,14 @@ function FeedingForm() {
       stored.feeding = { type: feedingType, side, amount_ml: amountMl, food_name: foodName }
       localStorage.setItem("infant-tracker-quick-prefs", JSON.stringify(stored))
     } catch {}
+    const babyName = babies.find(b => b.id === babyId)?.name ?? "baby"
+    const feedLabel = feedingType === "breast" ? "Breast feeding" : feedingType === "bottle" ? `Bottle${amountMl ? ` (${amountMl}ml)` : ""}` : foodName || "Solid food"
+    client.from("notifications").insert({
+      family_id: familyId, actor_id: session?.user.id, type: "feeding",
+      title: `${displayName} logged a feeding`,
+      body: `${feedLabel} for ${babyName}`,
+      reference_id: feedRow?.id ?? null,
+    }).then(() => {}).catch(err => console.error("[notification]", err))
     router.replace("/dashboard")
   }
 
@@ -95,6 +111,7 @@ function FeedingForm() {
             <CardHeader><CardTitle>Feeding details</CardTitle></CardHeader>
             <CardContent className="space-y-6">
               {error && <p className="text-sm text-destructive bg-destructive/10 px-3 py-2 rounded-md">{error}</p>}
+              {scanMessage && <p className="text-xs text-primary font-medium">{scanMessage}</p>}
 
               {babies.length > 1 && (
                 <div className="space-y-2">
@@ -159,6 +176,17 @@ function FeedingForm() {
                 <div className="space-y-2">
                   <Label>Food name <span className="text-muted-foreground">(optional)</span></Label>
                   <Input value={foodName} onChange={e => setFoodName(e.target.value)} placeholder="e.g. Mashed banana" />
+                </div>
+              )}
+
+              {allergenTags.length > 0 && (
+                <div className="space-y-1">
+                  <Label>Allergens detected</Label>
+                  <div className="flex flex-wrap gap-1">
+                    {allergenTags.map(a => (
+                      <span key={a} className="text-xs px-2 py-0.5 rounded-full bg-yellow-100 text-yellow-800 border border-yellow-300">{a}</span>
+                    ))}
+                  </div>
                 </div>
               )}
 

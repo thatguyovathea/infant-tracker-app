@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect, Suspense } from "react"
-import { useRouter } from "next/navigation"
+import { useRouter, useSearchParams } from "next/navigation"
 import { createClient } from "@/lib/supabase/client"
 import { getAuthedClient } from "@/lib/supabase/authed-client"
 import { Button } from "@/components/ui/button"
@@ -20,11 +20,13 @@ type Baby = { id: string; name: string }
 
 function DiaperForm() {
   const router = useRouter()
+  const searchParams = useSearchParams()
   const [babies, setBabies] = useState<Baby[]>([])
   const [babyId, setBabyId] = useState("")
   const [familyId, setFamilyId] = useState<string | null>(null)
+  const [displayName, setDisplayName] = useState("")
   const [type, setType] = useState("wet")
-  const [notes, setNotes] = useState("")
+  const [notes, setNotes] = useState(searchParams.get("product") ? `Product: ${searchParams.get("product")}` : "")
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
@@ -38,10 +40,14 @@ function DiaperForm() {
       const { data: m } = await client.from("family_members").select("family_id").eq("user_id", session.user.id).limit(1).maybeSingle()
       if (!m) return
       setFamilyId(m.family_id)
-      const { data: b } = await client.from("babies").select("id, name").eq("family_id", m.family_id).order("created_at")
+      const [{ data: b }, { data: profile }] = await Promise.all([
+        client.from("babies").select("id, name").eq("family_id", m.family_id).order("created_at"),
+        client.from("profiles").select("display_name").eq("id", session.user.id).maybeSingle(),
+      ])
       const list = b ?? []
       setBabies(list)
       if (list.length > 0) setBabyId(list[0].id)
+      setDisplayName(profile?.display_name ?? "Someone")
     }
     load()
   }, [router])
@@ -54,10 +60,10 @@ function DiaperForm() {
     const client = await getAuthedClient()
     if (!client) { router.replace("/login"); return }
     const { data: { session } } = await createClient().auth.getSession()
-    const { error } = await client.from("diaper_logs").insert({
+    const { data: diaperRow, error } = await client.from("diaper_logs").insert({
       baby_id: babyId, family_id: familyId, logged_by: session?.user.id,
       type, notes: notes || null, logged_at: new Date().toISOString(),
-    })
+    }).select("id").single()
     if (error) { setError(error.message); setLoading(false); return }
     // Update quick prefs so dashboard one-tap learns from this
     try {
@@ -65,6 +71,14 @@ function DiaperForm() {
       stored.diaper = { type }
       localStorage.setItem("infant-tracker-quick-prefs", JSON.stringify(stored))
     } catch {}
+    const babyName = babies.find(b => b.id === babyId)?.name ?? "baby"
+    const typeLabel = type === "wet" ? "Wet diaper" : type === "dirty" ? "Dirty diaper" : type === "both" ? "Wet & dirty diaper" : "Dry diaper"
+    client.from("notifications").insert({
+      family_id: familyId, actor_id: session?.user.id, type: "diaper",
+      title: `${displayName} logged a diaper change`,
+      body: `${typeLabel} for ${babyName}`,
+      reference_id: diaperRow?.id ?? null,
+    }).then(() => {}).catch(err => console.error("[notification]", err))
     router.replace("/dashboard")
   }
 

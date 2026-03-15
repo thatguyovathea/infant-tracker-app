@@ -1,8 +1,8 @@
 import type { Metadata, Viewport } from 'next'
 import { Geist, Geist_Mono } from 'next/font/google'
-import { Analytics } from '@vercel/analytics/next'
 import { ThemeProvider } from '@/components/theme-provider'
 import { ColorThemeProvider } from '@/lib/color-theme'
+import { Toaster } from '@/components/ui/sonner'
 import './globals.css'
 
 const _geist = Geist({ subsets: ["latin"] });
@@ -13,9 +13,9 @@ export const viewport: Viewport = {
 }
 
 export const metadata: Metadata = {
-  title: 'v0 App',
-  description: 'Created with v0',
-  generator: 'v0.app',
+  title: 'Infant Tracker',
+  description: 'Track feeding, sleep, and diaper changes for your baby.',
+  generator: 'Next.js',
   icons: {
     icon: [
       {
@@ -43,12 +43,12 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body className="font-sans antialiased">
-        <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
+        <ThemeProvider attribute="class" defaultTheme="light" themes={["light", "dim", "dark"]} disableTransitionOnChange>
           <ColorThemeProvider>
             {children}
+            <Toaster position="bottom-center" />
           </ColorThemeProvider>
         </ThemeProvider>
-        <Analytics />
       </body>
     </html>
   )

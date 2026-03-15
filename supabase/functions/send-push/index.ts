@@ -7,9 +7,16 @@ Deno.serve(async (req) => {
   if (req.method !== "POST") return new Response("Method not allowed", { status: 405 })
 
   const body = await req.json()
+  console.log("Webhook body:", JSON.stringify(body).slice(0, 300))
+
   // Webhook payload wraps the row in `record`
   const record = body.record ?? body
-  if (!record?.id || !record?.family_id) return new Response("Bad payload", { status: 400 })
+  console.log("Record:", JSON.stringify(record).slice(0, 300))
+
+  if (!record?.id || !record?.family_id) {
+    console.error("Bad payload — missing id or family_id")
+    return new Response("Bad payload", { status: 400 })
+  }
 
   const supabase = createClient(
     Deno.env.get("SUPABASE_URL")!,
@@ -17,24 +24,34 @@ Deno.serve(async (req) => {
   )
 
   // Get all family members except the actor who created this notification
-  const { data: members } = await supabase
+  const { data: members, error: membersError } = await supabase
     .from("family_members")
     .select("user_id")
     .eq("family_id", record.family_id)
     .neq("user_id", record.actor_id)
 
-  if (!members?.length) return new Response("No recipients", { status: 200 })
+  console.log("Members:", JSON.stringify(members), "Error:", membersError?.message)
+
+  if (!members?.length) {
+    console.log("No recipients — returning early")
+    return new Response("No recipients", { status: 200 })
+  }
 
   const userIds = members.map((m: { user_id: string }) => m.user_id)
 
   // Get their APNs device tokens
-  const { data: tokens } = await supabase
+  const { data: tokens, error: tokensError } = await supabase
     .from("device_tokens")
     .select("token")
     .in("user_id", userIds)
     .eq("platform", "ios")
 
-  if (!tokens?.length) return new Response("No device tokens", { status: 200 })
+  console.log("Tokens found:", tokens?.length, "Error:", tokensError?.message)
+
+  if (!tokens?.length) {
+    console.log("No device tokens — returning early")
+    return new Response("No device tokens", { status: 200 })
+  }
 
   const jwt = await buildApnsJwt(
     Deno.env.get("APNS_PRIVATE_KEY")!,

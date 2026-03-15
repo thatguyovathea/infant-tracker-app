@@ -2,11 +2,10 @@
 
 import { createContext, useContext, useEffect, useState } from "react"
 
-export type ColorTheme = "coral" | "sky"
+export type ColorTheme = "slate"
 
 export const COLOR_THEMES: { value: ColorTheme; label: string; preview: string }[] = [
-  { value: "coral", label: "Coral",    preview: "oklch(0.65 0.16 25)" },
-  { value: "sky",   label: "Sky Blue", preview: "oklch(0.60 0.19 220)" },
+  { value: "slate", label: "Slate", preview: "oklch(0.585 0.233 264)" },
 ]
 
 const COLOR_THEME_KEY = "infant-tracker-color-theme"
@@ -14,25 +13,19 @@ const COLOR_THEME_KEY = "infant-tracker-color-theme"
 const ColorThemeContext = createContext<{
   colorTheme: ColorTheme
   setColorTheme: (theme: ColorTheme) => void
-}>({ colorTheme: "coral", setColorTheme: () => {} })
+}>({ colorTheme: "slate", setColorTheme: () => {} })
 
-function applyTheme(theme: ColorTheme) {
-  if (theme === "coral") {
-    document.documentElement.removeAttribute("data-theme")
-  } else {
-    document.documentElement.setAttribute("data-theme", theme)
-  }
+function applyTheme(_theme: ColorTheme) {
+  // Single theme — no data-theme attribute needed
+  document.documentElement.removeAttribute("data-theme")
 }
 
 export function ColorThemeProvider({ children }: { children: React.ReactNode }) {
-  const [colorTheme, setColorThemeState] = useState<ColorTheme>("coral")
+  const [colorTheme, setColorThemeState] = useState<ColorTheme>("slate")
 
   useEffect(() => {
-    const stored = localStorage.getItem(COLOR_THEME_KEY) as ColorTheme | null
-    if (stored && COLOR_THEMES.find(t => t.value === stored)) {
-      setColorThemeState(stored)
-      applyTheme(stored)
-    }
+    // Clear any legacy theme attribute from old coral/sky system
+    document.documentElement.removeAttribute("data-theme")
   }, [])
 
   function setColorTheme(theme: ColorTheme) {

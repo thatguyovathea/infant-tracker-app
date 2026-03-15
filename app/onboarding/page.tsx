@@ -3,26 +3,12 @@
 import { useState } from "react"
 import { useRouter } from "next/navigation"
 import { createClient } from "@/lib/supabase/client"
-import { createClient as createSupabaseClient } from "@supabase/supabase-js"
+import { getAuthedClient } from "@/lib/supabase/authed-client"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-
-// Creates an authenticated Supabase client using the session access token directly
-async function getAuthedClient() {
-  const supabase = createClient()
-  const { data: { session } } = await supabase.auth.getSession()
-  if (!session) return { client: null, session: null }
-
-  const client = createSupabaseClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    { global: { headers: { Authorization: `Bearer ${session.access_token}` } } }
-  )
-  return { client, session }
-}
 
 export default function OnboardingPage() {
   const router = useRouter()
@@ -35,8 +21,10 @@ export default function OnboardingPage() {
     setError(null)
 
     const name = (new FormData(e.currentTarget)).get("name") as string
-    const { client, session } = await getAuthedClient()
-    if (!client || !session) { router.replace("/login"); return }
+    const client = await getAuthedClient()
+    if (!client) { router.replace("/login"); return }
+    const { data: { session } } = await createClient().auth.getSession()
+    if (!session) { router.replace("/login"); return }
 
     const { data: family, error: familyError } = await client
       .from("families")
@@ -61,8 +49,10 @@ export default function OnboardingPage() {
     setError(null)
 
     const invite_code = ((new FormData(e.currentTarget)).get("invite_code") as string).trim().toLowerCase()
-    const { client, session } = await getAuthedClient()
-    if (!client || !session) { router.replace("/login"); return }
+    const client = await getAuthedClient()
+    if (!client) { router.replace("/login"); return }
+    const { data: { session } } = await createClient().auth.getSession()
+    if (!session) { router.replace("/login"); return }
 
     const { data: family, error: findError } = await client
       .from("families")

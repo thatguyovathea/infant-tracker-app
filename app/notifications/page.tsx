@@ -55,12 +55,12 @@ export default function NotificationsPage() {
       setLoading(false)
 
       // Mark all unread as read
-      const unread = (data ?? []).filter(n => !n.read_by.includes(session.user.id))
+      const unread = (data ?? []).filter(n => !(n.read_by ?? []).includes(session.user.id))
       if (unread.length > 0) {
         await Promise.all(
           unread.map(n =>
             client.from("notifications")
-              .update({ read_by: [...n.read_by, session.user.id] })
+              .update({ read_by: [...(n.read_by ?? []), session.user.id] })
               .eq("id", n.id)
           )
         )
@@ -88,7 +88,7 @@ export default function NotificationsPage() {
         ) : (
           <div className="divide-y">
             {notifications.map(n => {
-              const unread = userId && !n.read_by.includes(userId)
+              const unread = userId && !(n.read_by ?? []).includes(userId)
               return (
                 <div key={n.id} className={`flex items-start gap-3 px-4 py-4 ${unread ? "bg-primary/5" : ""}`}>
                   <span className="text-xl mt-0.5 shrink-0">{typeEmoji[n.type] ?? "🔔"}</span>

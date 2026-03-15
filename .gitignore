@@ -7,6 +7,27 @@ __v0_jsx-dev-runtime.ts
 node_modules/
 .next/
 out/
-.env*.local
 .DS_Store
 .mcp.json
+ios/App/mcp-shrimp-task-manager
+
+# Environment variables — all forms
+.env
+.env.local
+.env.*.local
+.env.development
+.env.production
+.env.test
+.env.staging
+
+# Private keys & certificates (APNs .p8, TLS certs, etc.)
+*.p8
+*.pem
+*.key
+*.p12
+*.cer
+
+# Xcode user-specific files
+ios/App/App.xcodeproj/project.xcuserstate
+ios/App/xcuserdata/
+ios/**/*.xcuserstate

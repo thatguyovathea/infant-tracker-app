@@ -286,8 +286,8 @@ export default function FamilyPage() {
       if (!membership) { router.replace("/onboarding"); return }
 
       const [{ data: familyData }, { data: membersData }, { data: babiesData }] = await Promise.all([
-        client.from("families").select("id, name, invite_code").eq("id", membership.family_id).single(),
-        client.from("family_members").select("user_id, role, joined_at").eq("family_id", membership.family_id).order("joined_at", { ascending: true }),
+        client.from("families").select("id, name, invite_code").eq("id", membership.family_id).limit(1).single(),
+        client.from("family_members").select("user_id, role, joined_at, profiles(display_name)").eq("family_id", membership.family_id).order("joined_at", { ascending: true }),
         client.from("babies").select("id, name, date_of_birth").eq("family_id", membership.family_id).order("created_at"),
       ])
 
@@ -295,9 +295,8 @@ export default function FamilyPage() {
       setBabies(babiesData ?? [])
 
       if (membersData?.length) {
-        const { data: profilesData } = await client.from("profiles").select("id, display_name").in("id", membersData.map(m => m.user_id))
-        const profileMap = Object.fromEntries((profilesData ?? []).map(p => [p.id, p.display_name]))
-        setMembers(membersData.map(m => ({ ...m, display_name: profileMap[m.user_id] ?? null })))
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        setMembers(membersData.map((m: any) => ({ ...m, display_name: m.profiles?.display_name ?? null })))
       }
 
       setLoading(false)
@@ -305,11 +304,15 @@ export default function FamilyPage() {
     load()
   }, [router])
 
-  function copyInviteCode() {
+  async function copyInviteCode() {
     if (!family) return
-    navigator.clipboard.writeText(family.invite_code)
-    setCopied(true)
-    setTimeout(() => setCopied(false), 2000)
+    try {
+      await navigator.clipboard.writeText(family.invite_code)
+      setCopied(true)
+      setTimeout(() => setCopied(false), 2000)
+    } catch {
+      // Clipboard API unavailable — user can copy the code manually
+    }
   }
 
   async function handleAddBaby(e: React.FormEvent) {
@@ -387,7 +390,7 @@ export default function FamilyPage() {
               <BabyCard
                 key={baby.id}
                 baby={baby}
-                familyId={family!.id}
+                familyId={family?.id ?? ""}
                 onSaved={updated => setBabies(prev => prev.map(b => b.id === updated.id ? updated : b))}
                 onDeleted={id => setBabies(prev => prev.filter(b => b.id !== id))}
               />

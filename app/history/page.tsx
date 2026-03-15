@@ -25,9 +25,9 @@ type LogItem = {
 const PAGE_SIZE = 30
 
 const typeColors: Record<string, string> = {
-  feeding: "bg-blue-400/40 border-blue-400/60 text-blue-800 backdrop-blur-sm",
-  sleep:   "bg-purple-400/40 border-purple-400/60 text-purple-800 backdrop-blur-sm",
-  diaper:  "bg-green-400/40 border-green-400/60 text-green-800 backdrop-blur-sm",
+  feeding: "bg-sky-400/40 border-sky-400/60 text-sky-800 backdrop-blur-sm",
+  sleep:   "bg-violet-400/40 border-violet-400/60 text-violet-800 backdrop-blur-sm",
+  diaper:  "bg-emerald-400/40 border-emerald-400/60 text-emerald-800 backdrop-blur-sm",
 }
 
 const typeEmoji: Record<string, string> = {
@@ -186,8 +186,11 @@ export default function HistoryPage() {
     setOffset(0)
     setExpandedId(null)
     setLoading(true)
-    if (familyId) await fetchPage(familyId, f, selectedBabyId, 0, false)
-    setLoading(false)
+    try {
+      if (familyId) await fetchPage(familyId, f, selectedBabyId, 0, false)
+    } finally {
+      setLoading(false)
+    }
   }
 
   async function handleBabyChange(babyId: string | null) {
@@ -196,17 +199,23 @@ export default function HistoryPage() {
     setOffset(0)
     setExpandedId(null)
     setLoading(true)
-    if (familyId) await fetchPage(familyId, filter, babyId, 0, false)
-    setLoading(false)
+    try {
+      if (familyId) await fetchPage(familyId, filter, babyId, 0, false)
+    } finally {
+      setLoading(false)
+    }
   }
 
   async function loadMore() {
     if (!familyId) return
     setLoadingMore(true)
     const newOffset = offset + PAGE_SIZE
-    await fetchPage(familyId, filter, selectedBabyId, newOffset, true)
-    setOffset(newOffset)
-    setLoadingMore(false)
+    try {
+      await fetchPage(familyId, filter, selectedBabyId, newOffset, true)
+      setOffset(newOffset)
+    } finally {
+      setLoadingMore(false)
+    }
   }
 
   async function handleDelete(item: LogItem) {

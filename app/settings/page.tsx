@@ -35,7 +35,9 @@ export default function SettingsPage() {
 
       setEmail(session.user.email ?? "")
 
-      const { data: profile } = await supabase
+      const client = await getAuthedClient()
+      if (!client) { router.replace("/login"); return }
+      const { data: profile } = await client
         .from("profiles")
         .select("display_name")
         .eq("id", session.user.id)
@@ -135,8 +137,8 @@ export default function SettingsPage() {
             <div className="grid grid-cols-3 gap-2">
               {([
                 { value: "light", label: "☀️ Light" },
+                { value: "dim",   label: "◑ Dim"   },
                 { value: "dark",  label: "🌙 Dark"  },
-                { value: "system", label: "⚙️ System" },
               ] as const).map(opt => (
                 <button
                   key={opt.value}

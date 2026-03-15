@@ -57,6 +57,9 @@ export default function TrendsPage() {
   const [familyId, setFamilyId] = useState<string | null>(null)
   const [growthData, setGrowthData] = useState<GrowthPoint[]>([])
 
+  type CorrelationPoint = { type: string; latencyMins: number; durationMins: number; count: number }
+  const [correlationData, setCorrelationData] = useState<CorrelationPoint[]>([])
+
   useEffect(() => {
     async function init() {
       const supabase = createClient()
@@ -83,7 +86,7 @@ export default function TrendsPage() {
       from.setHours(0, 0, 0, 0)
       const fromISO = from.toISOString()
 
-      let feedQ = client.from("feeding_logs").select("started_at, baby_id").eq("family_id", familyId!).gte("started_at", fromISO)
+      let feedQ = client.from("feeding_logs").select("started_at, ended_at, type, baby_id").eq("family_id", familyId!).gte("started_at", fromISO)
       let sleepQ = client.from("sleep_logs").select("started_at, ended_at, baby_id").eq("family_id", familyId!).gte("started_at", fromISO)
       let diaperQ = client.from("diaper_logs").select("logged_at, baby_id").eq("family_id", familyId!).gte("logged_at", fromISO)
 
@@ -127,6 +130,48 @@ export default function TrendsPage() {
         height_cm: r.height_cm,
         head_cm: r.head_cm,
       })))
+      // Feed → Sleep correlation
+      const CORR_WINDOW = 90  // minutes
+      const CORR_MIN = 3      // minimum pairings to show a bar
+      type Acc = { latencySum: number; durationSum: number; durCount: number; count: number }
+      const acc: Record<string, Acc> = {
+        breast: { latencySum: 0, durationSum: 0, durCount: 0, count: 0 },
+        bottle: { latencySum: 0, durationSum: 0, durCount: 0, count: 0 },
+        solid:  { latencySum: 0, durationSum: 0, durCount: 0, count: 0 },
+      }
+      sleeps?.forEach(sl => {
+        if (!sl.started_at) return
+        const sleepStart = new Date(sl.started_at)
+        const sleepEnd   = sl.ended_at ? new Date(sl.ended_at) : null
+        const candidates = (feedings ?? []).filter(f =>
+          f.baby_id === sl.baby_id &&
+          f.ended_at != null &&
+          new Date(f.ended_at) <= sleepStart &&
+          differenceInMinutes(sleepStart, new Date(f.ended_at)) <= CORR_WINDOW
+        )
+        if (!candidates.length) return
+        const best = candidates.reduce((a, b) =>
+          new Date(a.ended_at!) > new Date(b.ended_at!) ? a : b
+        )
+        const t = best.type as string
+        if (!(t in acc)) return
+        acc[t].latencySum += differenceInMinutes(sleepStart, new Date(best.ended_at!))
+        acc[t].count++
+        if (sleepEnd) {
+          acc[t].durationSum += differenceInMinutes(sleepEnd, sleepStart)
+          acc[t].durCount++
+        }
+      })
+      const corrResult: CorrelationPoint[] = (["breast", "bottle", "solid"] as const)
+        .filter(t => acc[t].count >= CORR_MIN)
+        .map(t => ({
+          type: t.charAt(0).toUpperCase() + t.slice(1),
+          latencyMins:  Math.round(acc[t].latencySum / acc[t].count),
+          durationMins: acc[t].durCount > 0 ? Math.round(acc[t].durationSum / acc[t].durCount) : 0,
+          count: acc[t].count,
+        }))
+      setCorrelationData(corrResult)
+
       setLoading(false)
     }
     fetch()
@@ -201,7 +246,7 @@ export default function TrendsPage() {
                     <YAxis tickFormatter={sleepTick} tick={{ fontSize: 11 }} axisLine={false} tickLine={false} width={36} />
                     <Tooltip content={<CustomTooltip unit="" />} formatter={(v: number) => sleepLabel(v)} />
                     <Bar dataKey="sleepMins" radius={[4, 4, 0, 0]}>
-                      {data.map((_, i) => <Cell key={i} fill="rgb(168 85 247 / 0.6)" />)}
+                      {data.map((d) => <Cell key={d.date} fill="rgb(167 139 250 / 0.7)" />)}
                     </Bar>
                   </BarChart>
                 </ResponsiveContainer>
@@ -223,29 +268,7 @@ export default function TrendsPage() {
                     <YAxis allowDecimals={false} tick={{ fontSize: 11 }} axisLine={false} tickLine={false} width={24} />
                     <Tooltip content={<CustomTooltip unit=" feedings" />} />
                     <Bar dataKey="feedings" radius={[4, 4, 0, 0]}>
-                      {data.map((_, i) => <Cell key={i} fill="rgb(96 165 250 / 0.6)" />)}
-                    </Bar>
-                  </BarChart>
-                </ResponsiveContainer>
-              </div>
-            </div>
-
-            {/* Diapers */}
-            <div className="space-y-2">
-              <div className="flex items-baseline justify-between">
-                <h2 className="font-semibold">💩 Diapers</h2>
-                <p className="text-xs text-muted-foreground">
-                  Avg {(data.reduce((a, d) => a + d.diapers, 0) / data.filter(d => d.diapers > 0).length || 0).toFixed(1)} / day
-                </p>
-              </div>
-              <div className="rounded-xl border bg-card p-4">
-                <ResponsiveContainer width="100%" height={160}>
-                  <BarChart data={data} barSize={range <= 7 ? 28 : range <= 14 ? 16 : 10}>
-                    <XAxis dataKey="date" tick={{ fontSize: 11 }} axisLine={false} tickLine={false} />
-                    <YAxis allowDecimals={false} tick={{ fontSize: 11 }} axisLine={false} tickLine={false} width={24} />
-                    <Tooltip content={<CustomTooltip unit=" changes" />} />
-                    <Bar dataKey="diapers" radius={[4, 4, 0, 0]}>
-                      {data.map((_, i) => <Cell key={i} fill="rgb(251 191 36 / 0.6)" />)}
+                      {data.map((d) => <Cell key={d.date} fill="rgb(56 189 248 / 0.7)" />)}
                     </Bar>
                   </BarChart>
                 </ResponsiveContainer>
@@ -306,6 +329,53 @@ export default function TrendsPage() {
                 </div>
               )
             })()}
+
+            {/* Feed → Sleep Correlation */}
+            {correlationData.length >= 2 ? (
+              <div className="space-y-2">
+                <div className="flex items-baseline justify-between">
+                  <h2 className="font-semibold">Feed → Sleep</h2>
+                  <p className="text-xs text-muted-foreground">{range}d · {correlationData.length} feeding types</p>
+                </div>
+                <div className="rounded-xl border bg-card p-4 flex flex-col sm:flex-row gap-4">
+                  <div className="flex-1 space-y-1">
+                    <p className="text-xs text-muted-foreground">Time to sleep after feed</p>
+                    <ResponsiveContainer width="100%" height={150}>
+                      <BarChart data={correlationData} barSize={40}>
+                        <XAxis dataKey="type" tick={{ fontSize: 11 }} axisLine={false} tickLine={false} />
+                        <YAxis tickFormatter={sleepTick} tick={{ fontSize: 11 }} axisLine={false} tickLine={false} width={36} />
+                        <Tooltip content={<CustomTooltip unit=" min" />} />
+                        <Bar dataKey="latencyMins" radius={[4, 4, 0, 0]}>
+                          {correlationData.map(d => <Cell key={d.type} fill="rgb(167 139 250 / 0.7)" />)}
+                        </Bar>
+                      </BarChart>
+                    </ResponsiveContainer>
+                  </div>
+                  <div className="flex-1 space-y-1">
+                    <p className="text-xs text-muted-foreground">Sleep duration after feed</p>
+                    <ResponsiveContainer width="100%" height={150}>
+                      <BarChart data={correlationData} barSize={40}>
+                        <XAxis dataKey="type" tick={{ fontSize: 11 }} axisLine={false} tickLine={false} />
+                        <YAxis tickFormatter={sleepTick} tick={{ fontSize: 11 }} axisLine={false} tickLine={false} width={36} />
+                        <Tooltip content={<CustomTooltip unit=" min" />} />
+                        <Bar dataKey="durationMins" radius={[4, 4, 0, 0]}>
+                          {correlationData.map(d => <Cell key={d.type} fill="rgb(56 189 248 / 0.7)" />)}
+                        </Bar>
+                      </BarChart>
+                    </ResponsiveContainer>
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <div className="space-y-2">
+                <h2 className="font-semibold">Feed → Sleep</h2>
+                <div className="rounded-xl border bg-card p-4">
+                  <p className="text-xs text-muted-foreground text-center py-4">
+                    Not enough data yet — try a longer date range
+                  </p>
+                </div>
+              </div>
+            )}
           </>
         )}
       </main>

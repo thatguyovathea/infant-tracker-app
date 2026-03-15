@@ -90,7 +90,7 @@ export default function ExportPage() {
     if (!client) { setExporting(null); return }
 
     const fromDate = subDays(new Date(), range)
-    fromDate.setHours(0, 0, 0, 0)
+    fromDate.setUTCHours(0, 0, 0, 0)
     const fromISO = fromDate.toISOString()
 
     const babyName = selectedBabyId
