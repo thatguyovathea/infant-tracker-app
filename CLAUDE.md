@@ -1,9 +1,8 @@
 ## Session Rules
-- At the END of every session, automatically update this CLAUDE.md file to reflect:
-  1. What was built or changed this session
-  2. Any new dependencies added
-  3. Updated status of what is complete vs incomplete
-- Do this without being asked, every single time before the session ends.
+- At the END of every session, automatically:
+  1. Update this CLAUDE.md file to reflect what was built/changed, new dependencies, and updated status
+  2. Stage all modified/new files (`git add`), commit with a descriptive message, and `git push origin main`
+  3. Do this without being asked, every single time before the session ends.
 
 # Project: v0 Infant Tracker App
 
