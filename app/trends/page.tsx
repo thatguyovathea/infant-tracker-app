@@ -231,28 +231,6 @@ export default function TrendsPage() {
           </div>
         ) : (
           <>
-            {/* Sleep */}
-            <div className="space-y-2">
-              <div className="flex items-baseline justify-between">
-                <h2 className="font-semibold">😴 Sleep</h2>
-                <p className="text-xs text-muted-foreground">
-                  Avg {sleepLabel(Math.round(data.reduce((a, d) => a + d.sleepMins, 0) / data.filter(d => d.sleepMins > 0).length || 0))} / day
-                </p>
-              </div>
-              <div className="rounded-xl border bg-card p-4">
-                <ResponsiveContainer width="100%" height={160}>
-                  <BarChart data={data} barSize={range <= 7 ? 28 : range <= 14 ? 16 : 10}>
-                    <XAxis dataKey="date" tick={{ fontSize: 11 }} axisLine={false} tickLine={false} />
-                    <YAxis tickFormatter={sleepTick} tick={{ fontSize: 11 }} axisLine={false} tickLine={false} width={36} />
-                    <Tooltip content={<CustomTooltip unit="" />} formatter={(v: number) => sleepLabel(v)} />
-                    <Bar dataKey="sleepMins" radius={[4, 4, 0, 0]}>
-                      {data.map((d) => <Cell key={d.date} fill="rgb(167 139 250 / 0.7)" />)}
-                    </Bar>
-                  </BarChart>
-                </ResponsiveContainer>
-              </div>
-            </div>
-
             {/* Feeding */}
             <div className="space-y-2">
               <div className="flex items-baseline justify-between">
@@ -269,6 +247,28 @@ export default function TrendsPage() {
                     <Tooltip content={<CustomTooltip unit=" feedings" />} />
                     <Bar dataKey="feedings" radius={[4, 4, 0, 0]}>
                       {data.map((d) => <Cell key={d.date} fill="rgb(56 189 248 / 0.7)" />)}
+                    </Bar>
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+            </div>
+
+            {/* Sleep */}
+            <div className="space-y-2">
+              <div className="flex items-baseline justify-between">
+                <h2 className="font-semibold">😴 Sleep</h2>
+                <p className="text-xs text-muted-foreground">
+                  Avg {sleepLabel(Math.round(data.reduce((a, d) => a + d.sleepMins, 0) / data.filter(d => d.sleepMins > 0).length || 0))} / day
+                </p>
+              </div>
+              <div className="rounded-xl border bg-card p-4">
+                <ResponsiveContainer width="100%" height={160}>
+                  <BarChart data={data} barSize={range <= 7 ? 28 : range <= 14 ? 16 : 10}>
+                    <XAxis dataKey="date" tick={{ fontSize: 11 }} axisLine={false} tickLine={false} />
+                    <YAxis tickFormatter={sleepTick} tick={{ fontSize: 11 }} axisLine={false} tickLine={false} width={36} />
+                    <Tooltip content={<CustomTooltip unit="" />} formatter={(v: number) => sleepLabel(v)} />
+                    <Bar dataKey="sleepMins" radius={[4, 4, 0, 0]}>
+                      {data.map((d) => <Cell key={d.date} fill="rgb(167 139 250 / 0.7)" />)}
                     </Bar>
                   </BarChart>
                 </ResponsiveContainer>
