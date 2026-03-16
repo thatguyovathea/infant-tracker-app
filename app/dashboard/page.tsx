@@ -658,11 +658,13 @@ export default function DashboardPage() {
                 const outerEl = drawerOuterRef.current
                 const currentH = contentEl ? parseFloat(contentEl.style.maxHeight) || 0 : 0
                 const shouldOpen = currentH > 80
-                setDrawerOpen(shouldOpen)
-                // Snap outer back to position
                 if (outerEl) { outerEl.style.transition = 'transform 300ms ease-out'; outerEl.style.transform = 'translateY(0)' }
                 if (contentEl) { contentEl.style.transition = 'max-height 300ms ease-out'; contentEl.style.maxHeight = shouldOpen ? `${window.innerHeight * 0.7}px` : '0px' }
+                // Opening: set state immediately so content is interactive
+                // Closing: delay state update until after animation — prevents React re-render cancelling the transition
+                if (shouldOpen) setDrawerOpen(true)
                 setTimeout(() => {
+                  if (!shouldOpen) setDrawerOpen(false)
                   if (drawerOuterRef.current) { drawerOuterRef.current.style.transform = ''; drawerOuterRef.current.style.transition = '' }
                   if (drawerContentRef.current) { drawerContentRef.current.style.maxHeight = ''; drawerContentRef.current.style.transition = '' }
                 }, 320)
@@ -691,10 +693,11 @@ export default function DashboardPage() {
                 const outerEl = drawerOuterRef.current
                 const currentH = contentEl ? parseFloat(contentEl.style.maxHeight) || 0 : 0
                 const shouldOpen = currentH > 80
-                setDrawerOpen(shouldOpen)
                 if (outerEl) { outerEl.style.transition = 'transform 300ms ease-out'; outerEl.style.transform = 'translateY(0)' }
                 if (contentEl) { contentEl.style.transition = 'max-height 300ms ease-out'; contentEl.style.maxHeight = shouldOpen ? `${window.innerHeight * 0.7}px` : '0px' }
+                if (shouldOpen) setDrawerOpen(true)
                 setTimeout(() => {
+                  if (!shouldOpen) setDrawerOpen(false)
                   if (drawerOuterRef.current) { drawerOuterRef.current.style.transform = ''; drawerOuterRef.current.style.transition = '' }
                   if (drawerContentRef.current) { drawerContentRef.current.style.maxHeight = ''; drawerContentRef.current.style.transition = '' }
                 }, 320)
