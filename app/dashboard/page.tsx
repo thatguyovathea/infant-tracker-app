@@ -337,9 +337,24 @@ export default function DashboardPage() {
     }
     window.addEventListener("online", syncQueue)
 
+    // Sync unread count from cache when user returns from notifications page
+    function onVisibilityChange() {
+      if (document.visibilityState === "visible") {
+        try {
+          const raw = localStorage.getItem("dash-cache-v3")
+          if (raw) {
+            const cache = JSON.parse(raw)
+            if (typeof cache.unreadCount === "number") setUnreadCount(cache.unreadCount)
+          }
+        } catch { /* ignore */ }
+      }
+    }
+    document.addEventListener("visibilitychange", onVisibilityChange)
+
     return () => {
       supabase.removeChannel(channel)
       window.removeEventListener("online", syncQueue)
+      document.removeEventListener("visibilitychange", onVisibilityChange)
     }
   }, [router])
 

@@ -6,6 +6,7 @@ import { createClient } from "@/lib/supabase/client"
 import { getAuthedClient } from "@/lib/supabase/authed-client"
 import { formatDistanceToNow } from "date-fns"
 import { Button } from "@/components/ui/button"
+import { Capacitor } from "@capacitor/core"
 
 type Notification = {
   id: string
@@ -62,8 +63,25 @@ export default function NotificationsPage() {
             client.from("notifications")
               .update({ read_by: [...(n.read_by ?? []), session.user.id] })
               .eq("id", n.id)
+              .catch(err => console.error("[notifications] mark read", err))
           )
         )
+
+        // Clear iOS home screen badge
+        if (Capacitor.isNativePlatform()) {
+          const { PushNotifications } = await import("@capacitor/push-notifications")
+          PushNotifications.removeAllDeliveredNotifications().catch(() => {})
+        }
+
+        // Reset unread count in dashboard cache so bell clears on return
+        try {
+          const raw = localStorage.getItem("dash-cache-v3")
+          if (raw) {
+            const cache = JSON.parse(raw)
+            cache.unreadCount = 0
+            localStorage.setItem("dash-cache-v3", JSON.stringify(cache))
+          }
+        } catch { /* ignore */ }
       }
     }
     load()
