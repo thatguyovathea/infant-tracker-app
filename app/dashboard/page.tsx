@@ -631,7 +631,15 @@ export default function DashboardPage() {
             <div
               ref={drawerHandleRef}
               className="shrink-0 flex flex-col items-center border-t bg-background/80 touch-none py-2 gap-1.5"
-              onClick={() => { if (didDrag.current) { didDrag.current = false; return } setDrawerOpen(p => !p) }}
+              onClick={() => {
+                if (didDrag.current) { didDrag.current = false; return }
+                // Clear any leftover inline style from a previous drag-close before opening
+                if (!drawerOpen && drawerContentRef.current) {
+                  drawerContentRef.current.style.maxHeight = ''
+                  drawerContentRef.current.style.transition = ''
+                }
+                setDrawerOpen(p => !p)
+              }}
               onTouchStart={e => {
                 dragStartY.current = e.touches[0].clientY
                 didDrag.current = false
@@ -661,13 +669,18 @@ export default function DashboardPage() {
                 const shouldOpen = draggedDown < 100
                 if (outerEl) { outerEl.style.transition = 'transform 300ms ease-out'; outerEl.style.transform = 'translateY(0)' }
                 if (contentEl) { contentEl.style.transition = 'max-height 300ms ease-out'; contentEl.style.maxHeight = shouldOpen ? `${window.innerHeight * 0.7}px` : '0px' }
-                // Opening: set state immediately so content is interactive
-                // Closing: delay state update until after animation — prevents React re-render cancelling the transition
-                if (shouldOpen) setDrawerOpen(true)
                 setTimeout(() => {
-                  if (!shouldOpen) setDrawerOpen(false)
-                  if (drawerOuterRef.current) { drawerOuterRef.current.style.transform = ''; drawerOuterRef.current.style.transition = '' }
-                  if (drawerContentRef.current) { drawerContentRef.current.style.maxHeight = ''; drawerContentRef.current.style.transition = '' }
+                  if (outerEl) { outerEl.style.transform = ''; outerEl.style.transition = '' }
+                  if (shouldOpen) {
+                    // Opening: clear inline style and hand control back to Tailwind class
+                    setDrawerOpen(true)
+                    if (contentEl) { contentEl.style.maxHeight = ''; contentEl.style.transition = '' }
+                  } else {
+                    // Closing: update state but keep inline maxHeight=0 to prevent flash
+                    // Tailwind class will be max-h-0 anyway; inline style cleared on next open
+                    setDrawerOpen(false)
+                    if (contentEl) { contentEl.style.transition = '' }
+                  }
                 }, 320)
               }}
               onMouseDown={e => {
@@ -697,11 +710,15 @@ export default function DashboardPage() {
                 const shouldOpen = draggedDown < 100
                 if (outerEl) { outerEl.style.transition = 'transform 300ms ease-out'; outerEl.style.transform = 'translateY(0)' }
                 if (contentEl) { contentEl.style.transition = 'max-height 300ms ease-out'; contentEl.style.maxHeight = shouldOpen ? `${window.innerHeight * 0.7}px` : '0px' }
-                if (shouldOpen) setDrawerOpen(true)
                 setTimeout(() => {
-                  if (!shouldOpen) setDrawerOpen(false)
-                  if (drawerOuterRef.current) { drawerOuterRef.current.style.transform = ''; drawerOuterRef.current.style.transition = '' }
-                  if (drawerContentRef.current) { drawerContentRef.current.style.maxHeight = ''; drawerContentRef.current.style.transition = '' }
+                  if (outerEl) { outerEl.style.transform = ''; outerEl.style.transition = '' }
+                  if (shouldOpen) {
+                    setDrawerOpen(true)
+                    if (contentEl) { contentEl.style.maxHeight = ''; contentEl.style.transition = '' }
+                  } else {
+                    setDrawerOpen(false)
+                    if (contentEl) { contentEl.style.transition = '' }
+                  }
                 }, 320)
               }}
               onMouseLeave={() => { dragStartY.current = null }}
