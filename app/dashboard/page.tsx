@@ -100,6 +100,32 @@ function feedingPresetLabel(prefs: QuickPrefs["feeding"]): string {
 
 const DAY_LABELS = ["S", "M", "T", "W", "T", "F", "S"]
 
+// ---------- dashboard cache (stale-while-revalidate) ----------
+const DASH_CACHE_KEY = "dash-cache-v3"
+type DashCache = {
+  userId: string
+  familyId: string
+  displayName: string
+  babies: Baby[]
+  activity: ActivityItem[]
+  summaries: DailySummary[]
+  todayLogs: TodayLogs
+  weekFeedings: WeekDay[]
+  weekSleep: WeekDay[]
+  unreadCount: number
+  prefs: QuickPrefs
+}
+function readDashCache(): DashCache | null {
+  try {
+    const raw = localStorage.getItem(DASH_CACHE_KEY)
+    return raw ? (JSON.parse(raw) as DashCache) : null
+  } catch { return null }
+}
+function saveDashCache(d: DashCache) {
+  try { localStorage.setItem(DASH_CACHE_KEY, JSON.stringify(d)) } catch { /* storage full */ }
+}
+// --------------------------------------------------------------
+
 export default function DashboardPage() {
   const router = useRouter()
   const [babies, setBabies] = useState<Baby[]>([])
@@ -137,8 +163,25 @@ export default function DashboardPage() {
       const { data: { session } } = await supabase.auth.getSession()
       if (!session) { router.replace("/login"); return }
 
+      // Restore from cache immediately — eliminates loading screen on repeat opens
+      const cache = readDashCache()
+      if (cache && cache.userId === session.user.id) {
+        setBabies(cache.babies)
+        setActivity(cache.activity)
+        setSummaries(cache.summaries)
+        setTodayLogs(cache.todayLogs)
+        setWeekFeedings(cache.weekFeedings)
+        setWeekSleep(cache.weekSleep)
+        setUnreadCount(cache.unreadCount)
+        setPrefs(cache.prefs)
+        setFamilyId(cache.familyId)
+        setUserId(cache.userId)
+        setDisplayName(cache.displayName)
+        setLoading(false)
+      }
+
       const client = await getAuthedClient()
-      if (!client) { router.replace("/login"); return }
+      if (!client) { if (!cache) router.replace("/login"); return }
 
       const { data: membership } = await client
         .from("family_members").select("family_id")
@@ -233,6 +276,31 @@ export default function DashboardPage() {
           .reduce((acc, s) => acc + differenceInMinutes(new Date(s.ended_at), new Date(s.started_at)), 0)
         return { day: DAY_LABELS[d.getDay()], value: Math.round(mins / 6) / 10 }
       }))
+
+      // Save fresh data to cache for next open
+      saveDashCache({
+        userId: session.user.id,
+        familyId: fid,
+        displayName: profile?.display_name ?? "Someone",
+        babies: babiesData ?? [],
+        activity: items,
+        summaries: Object.values(summaryMap),
+        todayLogs: { feedings: todayFeedings ?? [], sleeps: todaySleeps ?? [], diapers: todayDiapers ?? [] },
+        weekFeedings: Array.from({ length: 7 }, (_, i) => {
+          const d = new Date(sevenDaysAgo); d.setDate(d.getDate() + i)
+          const prefix = d.toISOString().slice(0, 10)
+          return { day: DAY_LABELS[d.getDay()], value: (wf ?? []).filter(f => f.started_at.startsWith(prefix)).length }
+        }),
+        weekSleep: Array.from({ length: 7 }, (_, i) => {
+          const d = new Date(sevenDaysAgo); d.setDate(d.getDate() + i)
+          const prefix = d.toISOString().slice(0, 10)
+          const mins = (ws ?? []).filter(s => s.started_at.startsWith(prefix))
+            .reduce((acc, s) => acc + differenceInMinutes(new Date(s.ended_at), new Date(s.started_at)), 0)
+          return { day: DAY_LABELS[d.getDay()], value: Math.round(mins / 6) / 10 }
+        }),
+        unreadCount: (notifs ?? []).filter(n => !(n.read_by ?? []).includes(session.user.id)).length,
+        prefs: stored,
+      })
 
       setLoading(false)
       setPendingCount(readQueue().length)
