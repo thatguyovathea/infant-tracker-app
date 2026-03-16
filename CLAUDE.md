@@ -75,6 +75,17 @@ App is locked to portrait on iPhone and iPad via `Info.plist` and `capacitor.con
 15. **Barcode scanning** — @zxing/browser via WKWebView camera; scan icon in dashboard header; auto-categorizes (food → /log/feeding, other → /log/diaper); allergen tags in feeding form; two-tier cache (memory + localStorage, 1yr TTL for hits, 30d for misses); Open Food Facts + UPC Item DB lookup
 16. **Push notifications** — APNs JWT auth (.p8 key), device token registration via Capacitor, Supabase Edge Function `send-push`, triggered by DB webhook on notifications INSERT. Tested and working on device 2026-03-13.
 
+## E2E Testing (added 2026-03-16)
+- `@playwright/test` installed as devDependency
+- `playwright.config.ts` — Chromium only, reuses dev server, list reporter
+- `tests/e2e/auth.setup.ts` — logs in once, saves browser storage state to `tests/.auth/user.json`
+- `tests/e2e/login.test.ts` — form renders, bad credentials error, auto-redirect when authed
+- `tests/e2e/dashboard.test.ts` — buttons visible, nav to log forms, unauth redirect
+- `tests/e2e/log-forms.test.ts` — feeding/sleep/diaper render + unauth redirects (no DB writes)
+- `.env.test.local.example` — template; copy to `.env.test.local` with TEST_EMAIL + TEST_PASSWORD
+- Run: `npm run test:e2e` | UI mode: `npm run test:e2e:ui`
+- Tests run BEFORE `npm run build` in pre-deploy checklist
+
 ## What is incomplete / pending ⏳
 - Nothing currently pending
 

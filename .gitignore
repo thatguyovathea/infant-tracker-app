@@ -31,3 +31,8 @@ ios/App/mcp-shrimp-task-manager
 ios/App/App.xcodeproj/project.xcuserstate
 ios/App/xcuserdata/
 ios/**/*.xcuserstate
+# Playwright
+tests/.auth/
+.env.test.local
+test-results/
+playwright-report/
