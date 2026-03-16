@@ -10,6 +10,7 @@ const config: CapacitorConfig = {
   ios: {
     allowsLinkPreview: false,
     preferredContentMode: "mobile",
+    scrollEnabled: true,
   },
 }
 
