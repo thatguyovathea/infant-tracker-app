@@ -657,7 +657,8 @@ export default function DashboardPage() {
                 const contentEl = drawerContentRef.current
                 const outerEl = drawerOuterRef.current
                 const currentH = contentEl ? parseFloat(contentEl.style.maxHeight) || 0 : 0
-                const shouldOpen = currentH > 80
+                const draggedDown = startDrawerHeight.current - currentH
+                const shouldOpen = draggedDown < 100
                 if (outerEl) { outerEl.style.transition = 'transform 300ms ease-out'; outerEl.style.transform = 'translateY(0)' }
                 if (contentEl) { contentEl.style.transition = 'max-height 300ms ease-out'; contentEl.style.maxHeight = shouldOpen ? `${window.innerHeight * 0.7}px` : '0px' }
                 // Opening: set state immediately so content is interactive
@@ -692,7 +693,8 @@ export default function DashboardPage() {
                 const contentEl = drawerContentRef.current
                 const outerEl = drawerOuterRef.current
                 const currentH = contentEl ? parseFloat(contentEl.style.maxHeight) || 0 : 0
-                const shouldOpen = currentH > 80
+                const draggedDown = startDrawerHeight.current - currentH
+                const shouldOpen = draggedDown < 100
                 if (outerEl) { outerEl.style.transition = 'transform 300ms ease-out'; outerEl.style.transform = 'translateY(0)' }
                 if (contentEl) { contentEl.style.transition = 'max-height 300ms ease-out'; contentEl.style.maxHeight = shouldOpen ? `${window.innerHeight * 0.7}px` : '0px' }
                 if (shouldOpen) setDrawerOpen(true)
