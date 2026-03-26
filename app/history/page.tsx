@@ -10,12 +10,12 @@ import { Badge } from "@/components/ui/badge"
 import { Separator } from "@/components/ui/separator"
 import { format, isToday, isYesterday, differenceInMinutes } from "date-fns"
 
-type Filter = "all" | "feeding" | "sleep" | "diaper"
+type Filter = "all" | "feeding" | "sleep" | "diaper" | "growth"
 type Baby = { id: string; name: string }
 
 type LogItem = {
   id: string
-  type: "feeding" | "sleep" | "diaper"
+  type: "feeding" | "sleep" | "diaper" | "growth"
   label: string
   detail: string | null
   timestamp: string
@@ -28,18 +28,21 @@ const typeColors: Record<string, string> = {
   feeding: "bg-sky-400/40 border-sky-400/60 text-sky-800 backdrop-blur-sm",
   sleep:   "bg-violet-400/40 border-violet-400/60 text-violet-800 backdrop-blur-sm",
   diaper:  "bg-emerald-400/40 border-emerald-400/60 text-emerald-800 backdrop-blur-sm",
+  growth:  "bg-amber-400/40 border-amber-400/60 text-amber-800 backdrop-blur-sm",
 }
 
 const typeEmoji: Record<string, string> = {
   feeding: "🍼",
   sleep: "😴",
   diaper: "💩",
+  growth: "📏",
 }
 
 const tableFor: Record<string, string> = {
   feeding: "feeding_logs",
   sleep: "sleep_logs",
   diaper: "diaper_logs",
+  growth: "growth_logs",
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -71,6 +74,15 @@ function sleepLabel(r: any): { label: string; detail: string | null } {
 function diaperLabel(r: any): { label: string; detail: string | null } {
   const map: Record<string, string> = { wet: "Wet diaper", dirty: "Dirty diaper", both: "Wet & dirty diaper", dry: "Dry diaper" }
   return { label: map[r.type] ?? "Diaper change", detail: null }
+}
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function growthLabel(r: any): { label: string; detail: string | null } {
+  const parts: string[] = []
+  if (r.weight_kg) parts.push(`${r.weight_kg} kg`)
+  if (r.height_cm) parts.push(`${r.height_cm} cm`)
+  if (r.head_cm) parts.push(`head ${r.head_cm} cm`)
+  return { label: "Growth · " + (parts.join(", ") || "recorded"), detail: null }
 }
 
 function groupByDate(items: LogItem[]): { dateKey: string; label: string; items: LogItem[] }[] {
@@ -147,6 +159,16 @@ export default function HistoryPage() {
           }))
       )
     }
+    if (currentFilter === "all" || currentFilter === "growth") {
+      fetches.push(
+        applyBabyFilter(client.from("growth_logs").select("*").eq("family_id", fid))
+          .order("measured_at", { ascending: false }).range(from, to)
+          .then(({ data }: { data: any[] | null }) => (data ?? []).map(r => {
+            const { label, detail } = growthLabel(r)
+            return { id: r.id, type: "growth" as const, label, detail, timestamp: r.measured_at, notes: r.notes }
+          }))
+      )
+    }
 
     const results = await Promise.all(fetches)
     const merged = results.flat().sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime())
@@ -177,7 +199,7 @@ export default function HistoryPage() {
       await fetchPage(fid, "all", null, 0, false)
       setLoading(false)
     }
-    init()
+    init().catch(() => setLoading(false))
   }, [router, fetchPage])
 
   async function handleFilterChange(f: Filter) {
@@ -239,7 +261,7 @@ export default function HistoryPage() {
 
       {/* Type filter */}
       <div className={`px-4 py-2 flex gap-2 overflow-x-auto ${multipleBabies ? "border-b" : "border-b"}`}>
-        {(["all", "feeding", "sleep", "diaper"] as Filter[]).map((f) => (
+        {(["all", "feeding", "sleep", "diaper", "growth"] as Filter[]).map((f) => (
           <button key={f} onClick={() => handleFilterChange(f)}
             className={`px-3 py-1.5 rounded-full text-sm font-medium transition-colors capitalize shrink-0 ${filter === f ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground hover:bg-muted/80"}`}>
             {f === "all" ? "All" : `${typeEmoji[f]} ${f.charAt(0).toUpperCase() + f.slice(1)}`}

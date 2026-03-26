@@ -73,7 +73,7 @@ export default function TrendsPage() {
       const { data: babiesData } = await client.from("babies").select("id, name").eq("family_id", m.family_id).order("created_at")
       setBabies(babiesData ?? [])
     }
-    init()
+    init().catch(() => {})
   }, [router])
 
   useEffect(() => {
@@ -174,7 +174,7 @@ export default function TrendsPage() {
 
       setLoading(false)
     }
-    fetch()
+    fetch().catch(() => setLoading(false))
   }, [familyId, range, selectedBabyId])
 
   const { units } = useUnits()

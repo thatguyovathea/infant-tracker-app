@@ -305,7 +305,7 @@ export default function FamilyPage() {
 
       setLoading(false)
     }
-    load()
+    load().catch(() => setLoading(false))
   }, [router])
 
   async function copyInviteCode() {

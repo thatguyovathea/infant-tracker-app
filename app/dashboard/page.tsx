@@ -155,6 +155,7 @@ export default function DashboardPage() {
   const startDrawerHeight = useRef<number>(0)
   const [weekFeedings, setWeekFeedings] = useState<WeekDay[]>([])
   const [weekSleep, setWeekSleep] = useState<WeekDay[]>([])
+  const channelRef = useRef<ReturnType<ReturnType<typeof createClient>["channel"]> | null>(null)
   const { bg } = useDashboardBg()
 
   useEffect(() => {
@@ -305,15 +306,22 @@ export default function DashboardPage() {
       setLoading(false)
       setPendingCount(readQueue().length)
       registerPushNotifications()
-    }
-    load()
 
-    const supabase = createClient()
-    const channel = supabase.channel("notifications")
-      .on("postgres_changes", { event: "INSERT", schema: "public", table: "notifications" }, () => {
-        setUnreadCount(prev => prev + 1)
-      })
-      .subscribe()
+      // Set up realtime subscription with family_id filter
+      const rtSupa = createClient()
+      const ch = rtSupa.channel("notifications")
+        .on("postgres_changes", {
+          event: "INSERT", schema: "public", table: "notifications",
+          filter: `family_id=eq.${fid}`,
+        }, (payload: { new?: { actor_id?: string } }) => {
+          // Don't increment for self-authored notifications
+          if (payload.new?.actor_id === session.user.id) return
+          setUnreadCount(prev => prev + 1)
+        })
+        .subscribe()
+      channelRef.current = ch
+    }
+    load().catch(() => setLoading(false))
 
     let syncing = false
     async function syncQueue() {
@@ -352,6 +360,8 @@ export default function DashboardPage() {
       syncing = false
     }
     window.addEventListener("online", syncQueue)
+    // Sync any queued items immediately if already online
+    if (navigator.onLine) syncQueue()
 
     // Sync unread count from cache when user returns from notifications page
     function onVisibilityChange() {
@@ -368,7 +378,7 @@ export default function DashboardPage() {
     document.addEventListener("visibilitychange", onVisibilityChange)
 
     return () => {
-      supabase.removeChannel(channel)
+      if (channelRef.current) createClient().removeChannel(channelRef.current)
       window.removeEventListener("online", syncQueue)
       document.removeEventListener("visibilitychange", onVisibilityChange)
     }

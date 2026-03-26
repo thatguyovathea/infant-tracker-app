@@ -15,9 +15,8 @@ CREATE TABLE IF NOT EXISTS public.verified_invite_joins (
 
 ALTER TABLE public.verified_invite_joins ENABLE ROW LEVEL SECURITY;
 
--- Users can insert their own verification record (done via RPC after invite validation)
-CREATE POLICY "verified_joins_insert_own" ON public.verified_invite_joins FOR INSERT
-  WITH CHECK (auth.uid() = user_id);
+-- NO INSERT policy — only the SECURITY DEFINER lookup_family_by_invite() can insert.
+-- (An INSERT policy here would let users bypass invite validation.)
 
 -- Users can read their own
 CREATE POLICY "verified_joins_select_own" ON public.verified_invite_joins FOR SELECT

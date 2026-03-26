@@ -64,6 +64,7 @@ export default function ExportPage() {
   const [range, setRange] = useState<Range>(30)
   const [loading, setLoading] = useState(true)
   const [exporting, setExporting] = useState<string | null>(null) // "feeding" | "sleep" | "diaper" | "all"
+  const [exportMsg, setExportMsg] = useState<string | null>(null)
 
   useEffect(() => {
     async function load() {
@@ -81,15 +82,18 @@ export default function ExportPage() {
       setBabies(b ?? [])
       setLoading(false)
     }
-    load()
+    load().catch(() => setLoading(false))
   }, [router])
 
   async function runExport(type: "feeding" | "sleep" | "diaper" | "all") {
     if (!familyId) return
     setExporting(type)
+    setExportMsg(null)
 
     const client = await getAuthedClient()
     if (!client) { setExporting(null); return }
+
+    const babyNameMap = Object.fromEntries(babies.map(b => [b.id, b.name]))
 
     const fromDate = subDays(new Date(), range)
     fromDate.setUTCHours(0, 0, 0, 0)
@@ -99,6 +103,7 @@ export default function ExportPage() {
       ? (babies.find(b => b.id === selectedBabyId)?.name ?? "baby")
       : "all"
     const dateTag = format(new Date(), "yyyy-MM-dd")
+    let hadData = false
 
     try {
       if (type === "feeding" || type === "all") {
@@ -113,7 +118,7 @@ export default function ExportPage() {
           const rows = data.map(r => ({
             date: format(new Date(r.started_at), "yyyy-MM-dd"),
             time: format(new Date(r.started_at), "HH:mm"),
-            baby_id: r.baby_id,
+            baby: babyNameMap[r.baby_id] ?? r.baby_id,
             type: r.type,
             side: r.side ?? "",
             duration_minutes: r.duration_seconds ? Math.round(r.duration_seconds / 60) : "",
@@ -121,6 +126,7 @@ export default function ExportPage() {
             food_name: r.food_name ?? "",
             notes: r.notes ?? "",
           }))
+          hadData = true
           shareOrDownload(toCsv(rows), `feedings_${babyName}_${dateTag}.csv`)
           if (type === "feeding") { setExporting(null); return }
           await new Promise(r => setTimeout(r, 500)) // small gap between shares
@@ -143,10 +149,11 @@ export default function ExportPage() {
             duration_minutes: r.ended_at
               ? Math.round((new Date(r.ended_at).getTime() - new Date(r.started_at).getTime()) / 60000)
               : "",
-            baby_id: r.baby_id,
+            baby: babyNameMap[r.baby_id] ?? r.baby_id,
             quality: r.quality,
             notes: r.notes ?? "",
           }))
+          hadData = true
           shareOrDownload(toCsv(rows), `sleep_${babyName}_${dateTag}.csv`)
           if (type === "sleep") { setExporting(null); return }
           await new Promise(r => setTimeout(r, 500))
@@ -165,13 +172,15 @@ export default function ExportPage() {
           const rows = data.map(r => ({
             date: format(new Date(r.logged_at), "yyyy-MM-dd"),
             time: format(new Date(r.logged_at), "HH:mm"),
-            baby_id: r.baby_id,
+            baby: babyNameMap[r.baby_id] ?? r.baby_id,
             type: r.type,
             notes: r.notes ?? "",
           }))
+          hadData = true
           shareOrDownload(toCsv(rows), `diapers_${babyName}_${dateTag}.csv`)
         }
       }
+      if (!hadData) setExportMsg("No data found for this date range.")
     } finally {
       setExporting(null)
     }
@@ -249,6 +258,9 @@ export default function ExportPage() {
             <p className="text-xs text-muted-foreground pb-1">
               Each export opens the iOS share sheet so you can save to Files, email, AirDrop, or open in Excel.
             </p>
+            {exportMsg && (
+              <p className="text-xs text-orange-600 pb-1">{exportMsg}</p>
+            )}
             <Button className="w-full" variant="outline"
               disabled={!!exporting}
               onClick={() => runExport("feeding")}>

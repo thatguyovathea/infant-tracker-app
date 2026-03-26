@@ -55,14 +55,13 @@ export default function NotificationsPage() {
       setNotifications(data ?? [])
       setLoading(false)
 
-      // Mark all unread as read
+      // Mark all unread as read (atomic via RPC)
       const unread = (data ?? []).filter(n => !(n.read_by ?? []).includes(session.user.id))
       if (unread.length > 0) {
         await Promise.all(
           unread.map(n =>
-            client.from("notifications")
-              .update({ read_by: [...(n.read_by ?? []), session.user.id] })
-              .eq("id", n.id)
+            client.rpc("mark_notification_read", { notification_id: n.id })
+              .then(() => {})
               .catch(err => console.error("[notifications] mark read", err))
           )
         )
@@ -84,7 +83,7 @@ export default function NotificationsPage() {
         } catch { /* ignore */ }
       }
     }
-    load()
+    load().catch(() => setLoading(false))
   }, [router])
 
   if (loading) return (
