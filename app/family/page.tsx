@@ -272,6 +272,10 @@ export default function FamilyPage() {
   // Leave family
   const [confirmLeave, setConfirmLeave] = useState(false)
 
+  // Admin transfer
+  const [transferTarget, setTransferTarget] = useState<string | null>(null)
+  const [transferring, setTransferring] = useState(false)
+
   useEffect(() => {
     async function load() {
       const supabase = createClient()
@@ -325,6 +329,25 @@ export default function FamilyPage() {
     if (error) { setAddError(error.message); setAdding(false); return }
     setBabies(prev => [...prev, data])
     setNewName(""); setNewDob(""); setShowAdd(false); setAdding(false)
+  }
+
+  async function transferAdmin(targetUserId: string) {
+    if (!currentUserId || !family) return
+    setTransferring(true)
+    const client = await getAuthedClient()
+    if (!client) { router.replace("/login"); return }
+    // Promote target to admin
+    const { error: promoteErr } = await client.from("family_members").update({ role: "admin" }).eq("user_id", targetUserId).eq("family_id", family.id)
+    if (promoteErr) { setTransferring(false); return }
+    // Demote self to member
+    await client.from("family_members").update({ role: "member" }).eq("user_id", currentUserId).eq("family_id", family.id)
+    setMembers(prev => prev.map(m => {
+      if (m.user_id === targetUserId) return { ...m, role: "admin" }
+      if (m.user_id === currentUserId) return { ...m, role: "member" }
+      return m
+    }))
+    setTransferTarget(null)
+    setTransferring(false)
   }
 
   async function leaveFamily() {
@@ -417,7 +440,23 @@ export default function FamilyPage() {
                     </p>
                     <p className="text-xs text-muted-foreground">Joined {new Date(member.joined_at).toLocaleDateString()}</p>
                   </div>
-                  <Badge variant={member.role === "admin" ? "default" : "secondary"}>{member.role}</Badge>
+                  <div className="flex items-center gap-2">
+                    {isAdmin && member.role !== "admin" && member.user_id !== currentUserId && (
+                      transferTarget === member.user_id ? (
+                        <div className="flex items-center gap-1">
+                          <Button size="sm" variant="destructive" disabled={transferring} onClick={() => transferAdmin(member.user_id)}>
+                            {transferring ? "..." : "Confirm"}
+                          </Button>
+                          <Button size="sm" variant="outline" onClick={() => setTransferTarget(null)}>Cancel</Button>
+                        </div>
+                      ) : (
+                        <Button size="sm" variant="ghost" className="text-xs" onClick={() => setTransferTarget(member.user_id)}>
+                          Make Admin
+                        </Button>
+                      )
+                    )}
+                    <Badge variant={member.role === "admin" ? "default" : "secondary"}>{member.role}</Badge>
+                  </div>
                 </div>
               </div>
             ))}

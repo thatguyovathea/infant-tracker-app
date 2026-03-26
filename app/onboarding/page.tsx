@@ -54,17 +54,16 @@ export default function OnboardingPage() {
     const { data: { session } } = await createClient().auth.getSession()
     if (!session) { router.replace("/login"); return }
 
-    const { data: family, error: findError } = await client
-      .from("families")
-      .select("id")
-      .eq("invite_code", invite_code)
-      .single()
+    const { data: familyId, error: findError } = await client
+      .rpc("lookup_family_by_invite", { code: invite_code })
 
-    if (findError || !family) {
+    if (findError || !familyId) {
       setError("Invalid invite code. Please check and try again.")
       setLoading(false)
       return
     }
+
+    const family = { id: familyId }
 
     const { error: memberError } = await client
       .from("family_members")

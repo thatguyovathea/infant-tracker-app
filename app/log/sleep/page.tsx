@@ -63,6 +63,11 @@ function SleepForm() {
     if (!familyId || !babyId) return
     setLoading(true)
     setError(null)
+    if (endedAt && new Date(endedAt) <= new Date(startedAt)) {
+      setError("End time must be after start time.")
+      setLoading(false)
+      return
+    }
     const client = await getAuthedClient()
     if (!client) { router.replace("/login"); return }
     const { data: { session } } = await createClient().auth.getSession()

@@ -1,8 +1,10 @@
 const QUEUE_KEY = "infant-tracker-offline-queue"
+const MAX_RETRIES = 5
 
 export type QueuedInsert = {
   id: string            // local UUID for idempotency
   queuedAt: string
+  retries?: number
   operation: "insert"
   table: "feeding_logs" | "diaper_logs" | "sleep_logs"
   data: Record<string, unknown>
@@ -12,6 +14,7 @@ export type QueuedInsert = {
 export type QueuedUpdate = {
   id: string
   queuedAt: string
+  retries?: number
   operation: "update"
   table: "sleep_logs"
   rowId: string         // server-side row to update
@@ -50,4 +53,20 @@ export function removeFromQueue(id: string) {
 
 export function clearQueue() {
   localStorage.removeItem(QUEUE_KEY)
+}
+
+/** Increment retry count for a queued item. Returns true if still under limit. */
+export function bumpRetry(id: string): boolean {
+  const queue = readQueue()
+  const item = queue.find(i => i.id === id)
+  if (!item) return false
+  const retries = (item.retries ?? 0) + 1
+  if (retries >= MAX_RETRIES) {
+    // Expired — remove from queue
+    localStorage.setItem(QUEUE_KEY, JSON.stringify(queue.filter(i => i.id !== id)))
+    return false
+  }
+  item.retries = retries
+  localStorage.setItem(QUEUE_KEY, JSON.stringify(queue))
+  return true
 }

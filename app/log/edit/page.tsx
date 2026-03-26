@@ -154,6 +154,11 @@ function SleepEdit({ record, onSave }: { record: any; onSave: () => void }) {
     e.preventDefault()
     setSaving(true)
     setError(null)
+    if (endedAt && new Date(endedAt) <= new Date(startedAt)) {
+      setError("End time must be after start time.")
+      setSaving(false)
+      return
+    }
     const client = await getAuthedClient()
     if (!client) { router.replace("/login"); return }
 

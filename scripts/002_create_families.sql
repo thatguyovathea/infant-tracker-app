@@ -48,9 +48,8 @@ DROP POLICY IF EXISTS "babies_delete_admin" ON public.babies;
 CREATE POLICY "families_select_member" ON public.families FOR SELECT
   USING (id IN (SELECT family_id FROM public.family_members WHERE user_id = auth.uid()));
 
--- Families: any authenticated user can look up a family by invite code (needed to join)
-CREATE POLICY "families_select_invite" ON public.families FOR SELECT
-  USING (auth.uid() IS NOT NULL);
+-- Invite code lookup handled by lookup_family_by_invite() SECURITY DEFINER function
+-- (see 009_fix_family_rls.sql) — no open SELECT policy needed.
 
 -- Families: anyone authenticated can create
 CREATE POLICY "families_insert" ON public.families FOR INSERT

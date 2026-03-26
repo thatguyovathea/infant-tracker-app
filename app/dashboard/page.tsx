@@ -13,7 +13,7 @@ import { canScan } from "@/lib/barcode-scanner"
 import { lookupFood, lookupGeneral } from "@/lib/product-lookup"
 import { BarChart, Bar, XAxis, Cell, ResponsiveContainer } from "recharts"
 import { registerPushNotifications } from "@/lib/push-notifications"
-import { enqueue, readQueue, removeFromQueue } from "@/lib/offline-queue"
+import { enqueue, readQueue, removeFromQueue, bumpRetry } from "@/lib/offline-queue"
 
 function GroupIcon({ className }: { className?: string }) {
   return (
@@ -315,25 +315,41 @@ export default function DashboardPage() {
       })
       .subscribe()
 
+    let syncing = false
     async function syncQueue() {
+      if (syncing) return
+      syncing = true
       const queue = readQueue()
-      if (!queue.length) return
+      if (!queue.length) { syncing = false; return }
       const client = await getAuthedClient()
-      if (!client) return
+      if (!client) { syncing = false; return }
+      let dropped = 0
       for (const item of queue) {
         try {
+          let ok = true
           if (item.operation === "insert") {
             const { error } = await client.from(item.table).insert(item.data)
-            if (error) continue
+            if (error) ok = false
           } else if (item.operation === "update") {
             const { error } = await client.from(item.table).update(item.data).eq("id", item.rowId)
-            if (error) continue
+            if (error) ok = false
           }
-          if (item.notification) await client.from("notifications").insert(item.notification)
-          removeFromQueue(item.id)
-        } catch { /* leave in queue */ }
+          if (ok) {
+            if (item.notification) await client.from("notifications").insert(item.notification).catch(() => {})
+            removeFromQueue(item.id)
+          } else if (!bumpRetry(item.id)) {
+            dropped++
+          }
+        } catch {
+          if (!bumpRetry(item.id)) dropped++
+        }
       }
-      setPendingCount(readQueue().length)
+      const remaining = readQueue().length
+      setPendingCount(remaining)
+      if (dropped > 0) {
+        console.warn(`[offline-queue] ${dropped} item(s) dropped after max retries`)
+      }
+      syncing = false
     }
     window.addEventListener("online", syncQueue)
 
