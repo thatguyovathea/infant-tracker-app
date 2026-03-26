@@ -63,7 +63,8 @@ CREATE POLICY "families_update_admin" ON public.families FOR UPDATE
 CREATE POLICY "family_members_select" ON public.family_members FOR SELECT
   USING (family_id IN (SELECT family_id FROM public.family_members fm WHERE fm.user_id = auth.uid()));
 
--- Family members: anyone can insert themselves (joining a family)
+-- Family members: insert restricted to founders + verified invite joins
+-- (see 013_restrict_family_members_insert.sql for the updated policy)
 CREATE POLICY "family_members_insert" ON public.family_members FOR INSERT
   WITH CHECK (auth.uid() = user_id);
 

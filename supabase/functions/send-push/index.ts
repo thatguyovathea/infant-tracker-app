@@ -6,6 +6,17 @@ import { createClient } from "jsr:@supabase/supabase-js@2"
 Deno.serve(async (req) => {
   if (req.method !== "POST") return new Response("Method not allowed", { status: 405 })
 
+  // Verify webhook auth — accept either the service role key or a shared webhook secret
+  const authHeader = req.headers.get("authorization")
+  const webhookSecret = Deno.env.get("WEBHOOK_SECRET")
+  const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")
+
+  const token = authHeader?.replace(/^Bearer\s+/i, "")
+  if (!token || (token !== serviceRoleKey && token !== webhookSecret)) {
+    console.error("Unauthorized webhook call — invalid or missing auth token")
+    return new Response("Unauthorized", { status: 401 })
+  }
+
   const body = await req.json()
   console.log("Webhook body:", JSON.stringify(body).slice(0, 300))
 

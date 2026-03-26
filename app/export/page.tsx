@@ -20,8 +20,10 @@ const RANGES: { value: Range; label: string }[] = [
 
 function escapeCsv(val: string | number | null | undefined): string {
   if (val == null) return ""
-  const s = String(val)
-  if (s.includes(",") || s.includes('"') || s.includes("\n")) {
+  let s = String(val)
+  // Prevent spreadsheet formula injection (=, +, -, @, tab, carriage return)
+  if (/^[=+\-@\t\r]/.test(s)) s = "'" + s
+  if (s.includes(",") || s.includes('"') || s.includes("\n") || s !== String(val)) {
     return `"${s.replace(/"/g, '""')}"`
   }
   return s
