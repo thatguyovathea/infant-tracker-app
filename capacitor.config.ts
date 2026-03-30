@@ -2,7 +2,7 @@ import type { CapacitorConfig } from "@capacitor/cli"
 
 const config: CapacitorConfig = {
   appId: "com.infanttracker.app",
-  appName: "Infant Tracker",
+  appName: "Care Tracking",
   webDir: "out",
   server: {
     androidScheme: "https",

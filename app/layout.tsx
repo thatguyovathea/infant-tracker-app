@@ -3,6 +3,7 @@ import { Geist, Geist_Mono } from 'next/font/google'
 import { ThemeProvider } from '@/components/theme-provider'
 import { ColorThemeProvider } from '@/lib/color-theme'
 import { Toaster } from '@/components/ui/sonner'
+import { EdgeSwipeBack } from '@/components/edge-swipe-back'
 import './globals.css'
 
 const _geist = Geist({ subsets: ["latin"] });
@@ -13,7 +14,7 @@ export const viewport: Viewport = {
 }
 
 export const metadata: Metadata = {
-  title: 'Infant Tracker',
+  title: 'Care Tracking',
   description: 'Track feeding, sleep, and diaper changes for your baby.',
   generator: 'Next.js',
   icons: {
@@ -45,6 +46,7 @@ export default function RootLayout({
       <body className="font-sans antialiased">
         <ThemeProvider attribute="class" defaultTheme="light" themes={["light", "dim", "dark"]} disableTransitionOnChange>
           <ColorThemeProvider>
+            <EdgeSwipeBack />
             {children}
             <Toaster position="bottom-center" />
           </ColorThemeProvider>
