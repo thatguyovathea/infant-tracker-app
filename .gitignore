@@ -36,3 +36,10 @@ tests/.auth/
 .env.test.local
 test-results/
 playwright-report/
+
+# Claude tooling
+.claude/
+.claude-backup/
+
+# Supabase temp files
+supabase/.temp/
