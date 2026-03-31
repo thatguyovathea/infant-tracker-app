@@ -94,7 +94,7 @@ export default function NotificationsPage() {
 
   return (
     <div className="min-h-screen bg-background">
-      <header className="sticky top-0 z-20 border-b px-4 py-3 flex items-center gap-3 bg-background">
+      <header className="sticky top-0 z-20 border-b px-4 py-3 flex items-center gap-3 bg-background" style={{ paddingTop: "max(12px, env(safe-area-inset-top))" }}>
         <Button variant="ghost" size="sm" onClick={() => router.back()}>← Back</Button>
         <h1 className="font-semibold">Notifications</h1>
       </header>
