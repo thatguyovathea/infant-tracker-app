@@ -18,7 +18,7 @@ const STEPS: StepConfig[] = [
   },
   {
     title: "Activity Drawer",
-    body: "Swipe up to see today\u2019s activity. Tap any entry to edit or delete it.",
+    body: "Swipe up to see today\u2019s activity, swipe down to close it. Tap any entry to edit or delete it.",
     position: "above",
   },
   {
