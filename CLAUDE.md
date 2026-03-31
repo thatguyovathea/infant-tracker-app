@@ -89,8 +89,10 @@ App is locked to portrait on iPhone and iPad via `Info.plist` and `capacitor.con
 17. **Baby photo avatar** — tappable "edit" link under avatar in edit mode, photo picked from camera roll, resized to 200x200 JPEG, stored in localStorage (no server upload). Falls back to 👶 emoji.
 18. **Privacy policy** — `/privacy` route, no auth required, covers all Apple requirements
 19. **App renamed** — "Infant Tracker" → "Care Tracking" across capacitor config, Info.plist, package.json, layout.tsx
+20. **First-time walkthrough** — 7-step one-time guided tour (welcome modal + 6 tooltip callouts). Solid indigo style, localStorage persistence, spotlight overlay. Steps: welcome → quick-log → activity drawer → charts → family/babies → barcode scanner → settings.
 
 ## What is incomplete / pending ⏳
+- Walkthrough needs on-device testing (reset with `localStorage.removeItem("walkthrough-completed")`)
 - App Store screenshots + submission
 - Privacy policy URL needs to be set in App Store Connect (route exists at /privacy)
 - Demo account for Apple reviewers
@@ -124,8 +126,10 @@ Previous audit (2026-03-13) ✅ — 3 warnings fixed:
 - Privacy policy at /privacy route
 
 ## Key files
-- `app/dashboard/page.tsx` — main screen, quick-log, activity feed, offline queue, realtime, barcode scan
+- `app/dashboard/page.tsx` — main screen, quick-log, activity feed, offline queue, realtime, barcode scan, walkthrough
 - `app/history/page.tsx` — paginated activity log
+- `components/walkthrough.tsx` — 7-step first-time user walkthrough component
+- `lib/walkthrough.ts` — localStorage helpers for walkthrough persistence
 - `lib/baby-avatar.ts` — local photo storage for baby avatars
 - `app/notifications/page.tsx` — notifications list
 - `app/export/page.tsx` — CSV export
