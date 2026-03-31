@@ -218,11 +218,18 @@ function BabyCard({ baby, familyId, onSaved, onDeleted }: { baby: Baby; familyId
     <div className="bg-muted/30 rounded-xl px-4 py-4 space-y-3">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <div className="w-12 h-12 rounded-full overflow-hidden shrink-0 bg-muted flex items-center justify-center">
-            {photo ? (
-              <img src={photo} alt={baby.name} className="w-full h-full object-cover" />
-            ) : (
-              <span className="text-3xl">👶</span>
+          <div className="flex flex-col items-center shrink-0">
+            <div className="w-12 h-12 rounded-full overflow-hidden bg-muted flex items-center justify-center">
+              {photo ? (
+                <img src={photo} alt={baby.name} className="w-full h-full object-cover" />
+              ) : (
+                <span className="text-3xl">👶</span>
+              )}
+            </div>
+            {editing && (
+              <button type="button" onClick={() => fileInputRef.current?.click()} className="text-[10px] text-primary font-medium mt-1">
+                edit
+              </button>
             )}
           </div>
           <div>
@@ -249,28 +256,13 @@ function BabyCard({ baby, familyId, onSaved, onDeleted }: { baby: Baby; familyId
             <Label>Date of birth <span className="text-muted-foreground">(optional)</span></Label>
             <Input type="date" value={dob} onChange={e => setDob(e.target.value)} />
           </div>
-          <div className="space-y-1">
-            <Label>Photo</Label>
-            <input
-              ref={fileInputRef}
-              type="file"
-              accept="image/*"
-              className="hidden"
-              onChange={handlePhotoSelect}
-            />
-            <div className="flex items-center gap-3">
-              <div className="w-14 h-14 rounded-full overflow-hidden shrink-0 bg-muted flex items-center justify-center">
-                {photo ? (
-                  <img src={photo} alt={baby.name} className="w-full h-full object-cover" />
-                ) : (
-                  <span className="text-3xl">👶</span>
-                )}
-              </div>
-              <Button type="button" variant="outline" size="sm" onClick={() => fileInputRef.current?.click()}>
-                {photo ? "Change photo" : "Add photo"}
-              </Button>
-            </div>
-          </div>
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="image/*"
+            className="hidden"
+            onChange={handlePhotoSelect}
+          />
           <Button type="submit" className="w-full" disabled={saving || !name.trim()}>
             {saving ? "Saving..." : "Save changes"}
           </Button>
