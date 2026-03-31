@@ -583,8 +583,8 @@ export default function DashboardPage() {
         return (
           <div className="relative z-10 shrink-0 border-b bg-background/80 backdrop-blur-sm w-full">
             {displaySummaries.map(s => {
-              const sleepH = Math.floor(s.sleepMinutes / 60), sleepM = s.sleepMinutes % 60
-              const sleepStr = s.sleepMinutes === 0 ? "—" : sleepH > 0 ? `${sleepH}h ${sleepM}m` : `${sleepM}m`
+              const sleepH = Math.round(s.sleepMinutes / 60)
+              const sleepStr = s.sleepMinutes === 0 ? "—" : s.sleepMinutes < 30 ? "<1h" : `${sleepH}h`
               return (
                 <div key={s.babyId} className="px-5 py-2 max-w-lg mx-auto w-full">
                   <div className="grid grid-cols-3 gap-2">
