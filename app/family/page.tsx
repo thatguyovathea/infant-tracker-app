@@ -227,7 +227,7 @@ function BabyCard({ baby, familyId, onSaved, onDeleted }: { baby: Baby; familyId
               )}
             </div>
             {editing && (
-              <button type="button" onClick={() => fileInputRef.current?.click()} className="text-[10px] text-primary font-medium mt-1">
+              <button type="button" onClick={() => fileInputRef.current?.click()} className="text-[15px] leading-none text-primary font-medium mt-1 px-1">
                 edit
               </button>
             )}
