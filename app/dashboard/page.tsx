@@ -6,7 +6,7 @@ import Link from "next/link"
 import { createClient } from "@/lib/supabase/client"
 import { getAuthedClient } from "@/lib/supabase/authed-client"
 import { formatDistanceToNow, differenceInMinutes, format } from "date-fns"
-import { Settings, Bell, ScanBarcode, ClipboardList } from "lucide-react"
+import { Settings, Bell, ScanBarcode, FilePen } from "lucide-react"
 import { useDashboardBg } from "@/lib/dashboard-bg"
 import { BarcodeScannerModal } from "@/components/barcode-scanner-modal"
 import { canScan } from "@/lib/barcode-scanner"
@@ -827,7 +827,7 @@ export default function DashboardPage() {
             <GroupIcon className="w-5 h-5" />
           </button>
           <button className="h-9 w-9 flex items-center justify-center rounded-md hover:bg-muted active:opacity-60" onClick={() => router.push("/history")}>
-            <ClipboardList className="w-5 h-5" />
+            <FilePen className="w-5 h-5" />
           </button>
           {canScan() ? (
             <button className="h-9 w-9 flex items-center justify-center rounded-md hover:bg-muted active:opacity-60" onClick={() => setScanning(true)}>
