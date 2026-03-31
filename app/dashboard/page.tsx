@@ -784,14 +784,14 @@ export default function DashboardPage() {
           <div className="flex justify-evenly items-start">
             <div className="flex flex-col items-center gap-2">
               <button onClick={() => handleTap("feeding")} disabled={logging === "feeding"}
-                className={`w-[30vw] h-[30vw] rounded-full border-2 flex items-center justify-center active:scale-95 transition-all duration-150 ${flashSuccess === "feeding" ? "bg-sky-400/40 border-sky-400/80" : "bg-sky-400/20 border-sky-400/40"}`}>
+                className={`w-[30vw] h-[30vw] rounded-full border-0 flex items-center justify-center active:scale-95 transition-all duration-150 ${flashSuccess === "feeding" ? "bg-sky-400/40" : "bg-sky-400/20"}`}>
                 <span className="text-6xl">{flashSuccess === "feeding" ? "✅" : "🍼"}</span>
               </button>
               <p className="text-sm font-bold text-sky-900 dark:text-sky-100">Eat</p>
             </div>
             <div className="flex flex-col items-center gap-2">
               <button onClick={() => handleTap("sleep")} disabled={logging === "sleep"}
-                className={`w-[30vw] h-[30vw] rounded-full border-2 flex items-center justify-center active:scale-95 transition-all duration-150 ${flashSuccess === "sleep" ? "bg-violet-400/40 border-violet-400/80" : activeSleep ? "bg-violet-400/30 border-violet-400/70" : "bg-violet-400/20 border-violet-400/40"}`}>
+                className={`w-[30vw] h-[30vw] rounded-full border-0 flex items-center justify-center active:scale-95 transition-all duration-150 ${flashSuccess === "sleep" ? "bg-violet-400/40" : activeSleep ? "bg-violet-400/30" : "bg-violet-400/20"}`}>
                 <span className="text-6xl">{flashSuccess === "sleep" ? "✅" : "😴"}</span>
               </button>
               <p className="text-sm font-bold text-violet-900 dark:text-violet-100">
@@ -800,7 +800,7 @@ export default function DashboardPage() {
             </div>
             <div className="flex flex-col items-center gap-2">
               <button onClick={() => handleTap("diaper")} disabled={logging === "diaper"}
-                className={`w-[30vw] h-[30vw] rounded-full border-2 flex items-center justify-center active:scale-95 transition-all duration-150 ${flashSuccess === "diaper" ? "bg-emerald-400/40 border-emerald-400/80" : "bg-emerald-400/20 border-emerald-400/40"}`}>
+                className={`w-[30vw] h-[30vw] rounded-full border-0 flex items-center justify-center active:scale-95 transition-all duration-150 ${flashSuccess === "diaper" ? "bg-emerald-400/40" : "bg-emerald-400/20"}`}>
                 {flashSuccess === "diaper" ? <span className="text-6xl">✅</span> : <img src="/diaper.webp" alt="diaper" className="w-12 h-12 object-contain" />}
               </button>
               <p className="text-sm font-bold text-emerald-900 dark:text-emerald-100">Change</p>
