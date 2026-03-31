@@ -12,6 +12,8 @@ import { Badge } from "@/components/ui/badge"
 import { Separator } from "@/components/ui/separator"
 import { differenceInMonths, differenceInWeeks, format } from "date-fns"
 import { useUnits, formatWeight, formatLength } from "@/lib/units"
+import { getBabyPhoto, resizeAndSave } from "@/lib/baby-avatar"
+import { useRef } from "react"
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -169,6 +171,25 @@ function BabyCard({ baby, familyId, onSaved, onDeleted }: { baby: Baby; familyId
   const [deleting, setDeleting] = useState(false)
   const [confirmDelete, setConfirmDelete] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [photo, setPhoto] = useState<string | null>(null)
+  const fileInputRef = useRef<HTMLInputElement>(null)
+
+  useEffect(() => {
+    setPhoto(getBabyPhoto(baby.id))
+  }, [baby.id])
+
+  async function handlePhotoSelect(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0]
+    if (!file) return
+    try {
+      const dataUrl = await resizeAndSave(baby.id, file)
+      setPhoto(dataUrl)
+    } catch (err) {
+      console.error("Failed to save baby photo:", err)
+    }
+    // Reset input so the same file can be re-selected
+    e.target.value = ""
+  }
 
   async function handleSave(e: React.FormEvent) {
     e.preventDefault()
@@ -197,7 +218,24 @@ function BabyCard({ baby, familyId, onSaved, onDeleted }: { baby: Baby; familyId
     <div className="bg-muted/30 rounded-xl px-4 py-4 space-y-3">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <span className="text-3xl">👶</span>
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="image/*"
+            className="hidden"
+            onChange={handlePhotoSelect}
+          />
+          <button
+            type="button"
+            onClick={() => fileInputRef.current?.click()}
+            className="w-12 h-12 rounded-full overflow-hidden shrink-0 bg-muted flex items-center justify-center active:opacity-70 transition-opacity"
+          >
+            {photo ? (
+              <img src={photo} alt={baby.name} className="w-full h-full object-cover" />
+            ) : (
+              <span className="text-3xl">👶</span>
+            )}
+          </button>
           <div>
             <p className="font-semibold">{baby.name}</p>
             {ageLabel && <p className="text-xs text-muted-foreground">{ageLabel}</p>}
