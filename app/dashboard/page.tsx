@@ -14,6 +14,7 @@ import { lookupFood, lookupGeneral } from "@/lib/product-lookup"
 import { BarChart, Bar, XAxis, Cell, ResponsiveContainer } from "recharts"
 import { registerPushNotifications } from "@/lib/push-notifications"
 import { enqueue, readQueue, removeFromQueue, bumpRetry } from "@/lib/offline-queue"
+import { Walkthrough } from "@/components/walkthrough"
 
 function GroupIcon({ className }: { className?: string }) {
   return (
@@ -156,6 +157,11 @@ export default function DashboardPage() {
   const [weekFeedings, setWeekFeedings] = useState<WeekDay[]>([])
   const [weekSleep, setWeekSleep] = useState<WeekDay[]>([])
   const channelRef = useRef<ReturnType<ReturnType<typeof createClient>["channel"]> | null>(null)
+  const eventCirclesRef = useRef<HTMLDivElement>(null)
+  const chartsRef = useRef<HTMLDivElement>(null)
+  const familyIconRef = useRef<HTMLButtonElement>(null)
+  const scanIconRef = useRef<HTMLButtonElement>(null)
+  const settingsIconRef = useRef<HTMLButtonElement>(null)
   const { bg } = useDashboardBg()
 
   useEffect(() => {
@@ -569,7 +575,7 @@ export default function DashboardPage() {
               {pendingCount}
             </span>
           )}
-          <button className="h-9 w-9 flex items-center justify-center rounded-md hover:bg-muted" onClick={() => router.push("/settings")}>
+          <button ref={settingsIconRef} className="h-9 w-9 flex items-center justify-center rounded-md hover:bg-muted" onClick={() => router.push("/settings")}>
             <Settings className="w-5 h-5" />
           </button>
         </div>
@@ -616,7 +622,7 @@ export default function DashboardPage() {
         <div className="flex-1 flex flex-col overflow-hidden max-w-lg mx-auto w-full">
 
           {/* Charts section — visible when drawer is closed */}
-          <div className={`flex flex-col overflow-hidden transition-all duration-300 ${drawerOpen ? "max-h-0 opacity-0" : "flex-1 min-h-0 opacity-100"}`}>
+          <div ref={chartsRef} className={`flex flex-col overflow-hidden transition-all duration-300 ${drawerOpen ? "max-h-0 opacity-0" : "flex-1 min-h-0 opacity-100"}`}>
             <div className="flex-1 flex flex-col min-h-0 px-4 pt-3 pb-2 gap-3">
               <button onClick={() => router.push("/trends")} className="flex-1 min-h-0 rounded-xl border bg-card p-3 flex flex-col text-left active:opacity-70 transition-opacity">
                 <p className="text-xs font-semibold text-muted-foreground mb-1 shrink-0">Feedings · 7 days</p>
@@ -781,7 +787,7 @@ export default function DashboardPage() {
       {/* Event circles */}
       <div className="relative z-10 shrink-0 border-t bg-background">
         <div className="px-4 pt-3 pb-3 max-w-lg mx-auto w-full">
-          <div className="flex justify-evenly items-start">
+          <div ref={eventCirclesRef} className="flex justify-evenly items-start">
             <div className="flex flex-col items-center gap-2">
               <button onClick={() => handleTap("feeding")} disabled={logging === "feeding"}
                 className={`w-[30vw] h-[30vw] rounded-full border-0 flex items-center justify-center active:scale-95 transition-all duration-150 ${flashSuccess === "feeding" ? "bg-sky-400/40" : "bg-sky-400/20"}`}>
@@ -823,14 +829,14 @@ export default function DashboardPage() {
       {/* Bottom ribbon — family | activity | scan | bell */}
       <div className="relative z-10 shrink-0 border-t bg-background" style={{ paddingBottom: "env(safe-area-inset-bottom)" }}>
         <div className="flex items-center justify-evenly px-6 py-1 max-w-lg mx-auto w-full">
-          <button className="h-9 w-9 flex items-center justify-center rounded-md hover:bg-muted active:opacity-60" onClick={() => router.push("/family")}>
+          <button ref={familyIconRef} className="h-9 w-9 flex items-center justify-center rounded-md hover:bg-muted active:opacity-60" onClick={() => router.push("/family")}>
             <GroupIcon className="w-5 h-5" />
           </button>
           <button className="h-9 w-9 flex items-center justify-center rounded-md hover:bg-muted active:opacity-60" onClick={() => router.push("/history")}>
             <FilePen className="w-5 h-5" />
           </button>
           {canScan() ? (
-            <button className="h-9 w-9 flex items-center justify-center rounded-md hover:bg-muted active:opacity-60" onClick={() => setScanning(true)}>
+            <button ref={scanIconRef} className="h-9 w-9 flex items-center justify-center rounded-md hover:bg-muted active:opacity-60" onClick={() => setScanning(true)}>
               <ScanBarcode className="w-5 h-5" />
             </button>
           ) : <div className="h-9 w-9" />}
@@ -844,6 +850,15 @@ export default function DashboardPage() {
           </button>
         </div>
       </div>
+
+      <Walkthrough refs={{
+        eventCircles: eventCirclesRef,
+        drawerHandle: drawerHandleRef,
+        charts: chartsRef,
+        familyIcon: familyIconRef,
+        scanIcon: scanIconRef,
+        settingsIcon: settingsIconRef,
+      }} />
 
       {/* Daily detail sheet */}
       {sheet && (() => {
