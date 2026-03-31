@@ -319,8 +319,8 @@ export default function FamilyPage() {
     }
   }
 
-  async function handleAddBaby(e: React.FormEvent) {
-    e.preventDefault()
+  async function handleAddBaby(e?: any) {
+    e?.preventDefault?.()
     if (!family) return
     setAdding(true); setAddError(null)
     const client = await getAuthedClient()
@@ -391,11 +391,11 @@ export default function FamilyPage() {
           </div>
 
           {showAdd && (
-            <form onSubmit={handleAddBaby} className="bg-muted/30 rounded-xl px-4 py-4 space-y-3">
+            <div className="bg-muted/30 rounded-xl px-4 py-4 space-y-3">
               {addError && <p className="text-sm text-destructive bg-destructive/10 px-3 py-2 rounded-md">{addError}</p>}
               <div className="space-y-1">
                 <Label>Name</Label>
-                <Input value={newName} onChange={e => setNewName(e.target.value)} placeholder="Emma" required />
+                <Input value={newName} onChange={e => setNewName(e.target.value)} placeholder="Emma" />
               </div>
               <div className="space-y-1">
                 <Label>Date of birth <span className="text-muted-foreground">(optional)</span></Label>
@@ -403,11 +403,11 @@ export default function FamilyPage() {
               </div>
               <div className="flex gap-2">
                 <Button type="button" variant="outline" className="flex-1" onClick={() => setShowAdd(false)}>Cancel</Button>
-                <Button type="submit" className="flex-1" disabled={adding || !newName.trim()}>
+                <Button type="button" className="flex-1" disabled={adding || !newName.trim()} onClick={(e) => handleAddBaby(e as any)}>
                   {adding ? "Adding..." : "Add baby"}
                 </Button>
               </div>
-            </form>
+            </div>
           )}
 
           {babies.length === 0 && !showAdd && (
