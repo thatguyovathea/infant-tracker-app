@@ -7,7 +7,7 @@
 # Project: v0 Infant Tracker App
 
 ## Repo
-https://github.com/thatguyovathea/v0-infant-tracker-app
+https://github.com/thatguyovathea/infant-tracker-app
 
 ## What this is
 An infant tracking app for parents to log and monitor baby activity.
@@ -62,7 +62,7 @@ App is locked to portrait on iPhone and iPad via `Info.plist` and `capacitor.con
 3. **Baby profiles** — add, edit, delete, age display, notes
 4. **Quick logging** — one-tap feeding, sleep start/end, diaper from dashboard
 5. **Detailed log forms** — /log/feeding, /log/sleep, /log/diaper with full fields
-6. **History** — paginated log list with filters, edit, delete (`.limit(1)` fix applied)
+6. **Activity (History)** — paginated log list with filters, edit (with timestamp editing for all event types), delete (`.limit(1)` fix applied)
 7. **Trends** — `/trends` page exists but is no longer linked from the UI (replaced by dashboard sparklines). Feed→Sleep correlation is implemented there but deferred post-launch.
 8. **In-app notifications** — bell icon with unread badge, realtime subscription, notifications list page
 9. **Quick-log defaults synced to Supabase** — user_preferences table, loads remote first, falls back to localStorage
@@ -70,7 +70,7 @@ App is locked to portrait on iPhone and iPad via `Info.plist` and `capacitor.con
 11. **Offline support** — queue to localStorage when offline/network fails, auto-sync on reconnect, pending badge in header
 12. **Family page** — view members, invite code, leave family
 13. **Settings** — display name, theme (light/dark/system), links to defaults/family/export
-14. **UI polish** — sky blue/slate color palette (light + dark mode), dark mode frosted glass fix, 💩 diaper emoji, 3-person family icon, larger header icons, 30vw event circles (up from 28vw), family icon is now a dropdown (Family + Edit defaults), detail pencil links removed from bottom bar
+14. **UI polish** — sky blue/slate color palette (light + dark mode), dark mode frosted glass fix, 💩 diaper emoji, 3-person family icon, larger header icons, 30vw borderless event circles, 4-icon bottom nav (family | activity | scan | notifications), sticky headers on all pages, improved badge text contrast in dark mode
 17. **Dashboard drawer drag gesture** — imperative DOM animation (no React re-renders during drag); drag-up grows content via `maxHeight`; drag-down slides entire drawer (handle + content) via `translateY` so the handle follows the finger; snap with 300ms ease-out transition; tap-to-toggle preserved
 15. **Barcode scanning** — @zxing/browser via WKWebView camera; scan icon in dashboard header; auto-categorizes (food → /log/feeding, other → /log/diaper); allergen tags in feeding form; two-tier cache (memory + localStorage, 1yr TTL for hits, 30d for misses); Open Food Facts + UPC Item DB lookup
 16. **Push notifications** — APNs JWT auth (.p8 key), device token registration via Capacitor, Supabase Edge Function `send-push`, triggered by DB webhook on notifications INSERT. Tested and working on device 2026-03-13.
@@ -86,23 +86,47 @@ App is locked to portrait on iPhone and iPad via `Info.plist` and `capacitor.con
 - Run: `npm run test:e2e` | UI mode: `npm run test:e2e:ui`
 - Tests run BEFORE `npm run build` in pre-deploy checklist
 
-## What is incomplete / pending ⏳
-- Nothing currently pending
+17. **Baby photo avatar** — tappable "edit" link under avatar in edit mode, photo picked from camera roll, resized to 200x200 JPEG, stored in localStorage (no server upload). Falls back to 👶 emoji.
+18. **Privacy policy** — `/privacy` route, no auth required, covers all Apple requirements
+19. **App renamed** — "Infant Tracker" → "Care Tracking" across capacitor config, Info.plist, package.json, layout.tsx
 
-## Audit completed (2026-03-13) ✅
-Full codebase audit — no critical issues found. 3 warnings fixed:
-- Notification inserts in log/feeding, log/sleep, log/diaper now have `.catch(err => console.error(...))` instead of swallowing errors silently
-- Push token retry loop (`lib/push-notifications.ts`) guarded with `savingToken` flag to prevent concurrent executions
-- Export date (`app/export/page.tsx`) changed from `setHours` to `setUTCHours` for correct UTC midnight boundary
+## What is incomplete / pending ⏳
+- App Store screenshots + submission
+- Privacy policy URL needs to be set in App Store Connect (route exists at /privacy)
+- Demo account for Apple reviewers
+
+## Audit completed (2026-03-31) ✅
+Full dead code audit — 54 files deleted, 6,703 lines removed:
+- Dead route: app/baby/page.tsx (duplicated by /family)
+- 47 unused shadcn/ui components removed (kept 9 that are used)
+- Dead hooks: use-mobile.ts, use-toast.ts
+- Dead files: lib/supabase/server.ts, proxy.ts
+- Removed ios/App/mcp-shrimp-task-manager/ (unrelated junk)
+- Removed debug alert() call from family page
+- Build verified clean, zero broken references
+
+Previous audit (2026-03-13) ✅ — 3 warnings fixed:
+- Notification inserts now have `.catch(err => console.error(...))`
+- Push token retry loop guarded with `savingToken` flag
+- Export date changed from `setHours` to `setUTCHours`
 
 ## Future / planned
 - **Gender-based color theming** — dynamic color swap (lavender for female, blue for male) based on baby's gender field. Touches: babies table + forms, new useBabyColor() hook, dashboard, history badges, stat counters. ~5-6 files, 1-2 hours.
 - **Inventory tracking** — stock levels for diapers + food, restock notifications, Google Shopping deep-link for deals (full plan in `~/.claude/projects/-Users-rando/memory/inventory-tracking-plan.md`)
 - **Feed→Sleep correlation** — post-launch; code in `app/trends/page.tsx`, decide whether to surface in dashboard or revive trends page
 
+## App Store prep (2026-03-31)
+- App name: "Care Tracking"
+- Bundle ID: com.infanttracker.app
+- Version: 1.0.0 (build 1)
+- Icon: lavender moon-baby, full-bleed gradient, no border
+- Splash: matching lavender light + dark variants
+- Privacy policy at /privacy route
+
 ## Key files
 - `app/dashboard/page.tsx` — main screen, quick-log, activity feed, offline queue, realtime, barcode scan
-- `app/history/page.tsx` — paginated log history
+- `app/history/page.tsx` — paginated activity log
+- `lib/baby-avatar.ts` — local photo storage for baby avatars
 - `app/notifications/page.tsx` — notifications list
 - `app/export/page.tsx` — CSV export
 - `app/trends/page.tsx` — charts
