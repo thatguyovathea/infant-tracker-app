@@ -32,8 +32,18 @@ const STEPS: StepConfig[] = [
     position: "above",
   },
   {
+    title: "Activity Log",
+    body: "View and search your full activity history. Filter by type, edit timestamps, or delete entries.",
+    position: "above",
+  },
+  {
     title: "Barcode Scanner",
     body: "Scan any food or diaper barcode to auto-log it. We\u2019ll look up the product and check for allergens \u2014 no typing needed.",
+    position: "above",
+  },
+  {
+    title: "Notifications",
+    body: "See when family members log activities. Stay in sync with your partner without asking.",
     position: "above",
   },
   {
@@ -49,7 +59,9 @@ type WalkthroughProps = {
     drawerHandle: RefObject<HTMLDivElement | null>
     charts: RefObject<HTMLDivElement | null>
     familyIcon: RefObject<HTMLButtonElement | null>
+    activityIcon: RefObject<HTMLButtonElement | null>
     scanIcon: RefObject<HTMLButtonElement | null>
+    notificationsIcon: RefObject<HTMLButtonElement | null>
     settingsIcon: RefObject<HTMLButtonElement | null>
   }
 }
@@ -73,8 +85,10 @@ export function Walkthrough({ refs }: WalkthroughProps) {
       case 2: return refs.drawerHandle as RefObject<HTMLElement | null>
       case 3: return refs.charts as RefObject<HTMLElement | null>
       case 4: return refs.familyIcon as RefObject<HTMLElement | null>
-      case 5: return refs.scanIcon as RefObject<HTMLElement | null>
-      case 6: return refs.settingsIcon as RefObject<HTMLElement | null>
+      case 5: return refs.activityIcon as RefObject<HTMLElement | null>
+      case 6: return refs.scanIcon as RefObject<HTMLElement | null>
+      case 7: return refs.notificationsIcon as RefObject<HTMLElement | null>
+      case 8: return refs.settingsIcon as RefObject<HTMLElement | null>
       default: return null
     }
   }, [refs])
@@ -145,7 +159,7 @@ export function Walkthrough({ refs }: WalkthroughProps) {
   }, [step, refForStep])
 
   const advance = useCallback(() => {
-    if (step >= 6) {
+    if (step >= 8) {
       markWalkthroughComplete()
       setStep(-1)
     } else {
@@ -265,14 +279,15 @@ export function Walkthrough({ refs }: WalkthroughProps) {
         <div
           style={{
             position: "relative",
-            background: "#1e1b4b", border: "1px solid #4338ca",
+            background: "rgba(30, 27, 75, 0.85)", border: "1px solid rgba(67, 56, 202, 0.6)",
             borderRadius: 16, padding: 20, color: "white",
             boxShadow: "0 8px 32px rgba(99, 102, 241, 0.2)",
+            backdropFilter: "blur(16px)", WebkitBackdropFilter: "blur(16px)",
           }}
         >
           <div style={arrowStyle} />
           <div style={{ fontSize: 11, textTransform: "uppercase", letterSpacing: 1.5, color: "#A5B4FC", marginBottom: 8 }}>
-            Step {step + 1} of 7
+            Step {step + 1} of 9
           </div>
           <div style={{ fontWeight: 600, fontSize: 16, marginBottom: 6 }}>
             {config.title}
@@ -292,12 +307,12 @@ export function Walkthrough({ refs }: WalkthroughProps) {
                 fontWeight: 600, cursor: "pointer",
               }}
             >
-              {step === 6 ? "Done" : "Next"}
+              {step === 8 ? "Done" : "Next"}
             </button>
           </div>
           {/* Progress dots */}
           <div style={{ display: "flex", gap: 6, justifyContent: "center", marginTop: 14 }}>
-            {Array.from({ length: 7 }).map((_, i) => (
+            {Array.from({ length: 9 }).map((_, i) => (
               <div
                 key={i}
                 style={{

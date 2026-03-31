@@ -160,7 +160,9 @@ export default function DashboardPage() {
   const eventCirclesRef = useRef<HTMLDivElement>(null)
   const chartsRef = useRef<HTMLDivElement>(null)
   const familyIconRef = useRef<HTMLButtonElement>(null)
+  const activityIconRef = useRef<HTMLButtonElement>(null)
   const scanIconRef = useRef<HTMLButtonElement>(null)
+  const notificationsIconRef = useRef<HTMLButtonElement>(null)
   const settingsIconRef = useRef<HTMLButtonElement>(null)
   const { bg } = useDashboardBg()
 
@@ -832,7 +834,7 @@ export default function DashboardPage() {
           <button ref={familyIconRef} className="h-9 w-9 flex items-center justify-center rounded-md hover:bg-muted active:opacity-60" onClick={() => router.push("/family")}>
             <GroupIcon className="w-5 h-5" />
           </button>
-          <button className="h-9 w-9 flex items-center justify-center rounded-md hover:bg-muted active:opacity-60" onClick={() => router.push("/history")}>
+          <button ref={activityIconRef} className="h-9 w-9 flex items-center justify-center rounded-md hover:bg-muted active:opacity-60" onClick={() => router.push("/history")}>
             <FilePen className="w-5 h-5" />
           </button>
           {canScan() ? (
@@ -840,7 +842,7 @@ export default function DashboardPage() {
               <ScanBarcode className="w-5 h-5" />
             </button>
           ) : <div className="h-9 w-9" />}
-          <button className="relative h-9 w-9 flex items-center justify-center rounded-md hover:bg-muted active:opacity-60" onClick={() => { setUnreadCount(0); router.push("/notifications") }}>
+          <button ref={notificationsIconRef} className="relative h-9 w-9 flex items-center justify-center rounded-md hover:bg-muted active:opacity-60" onClick={() => { setUnreadCount(0); router.push("/notifications") }}>
             <Bell className="w-5 h-5" />
             {unreadCount > 0 && (
               <span className="absolute top-1 right-1 w-4 h-4 rounded-full bg-primary text-primary-foreground text-[10px] font-bold flex items-center justify-center leading-none">
@@ -856,7 +858,9 @@ export default function DashboardPage() {
         drawerHandle: drawerHandleRef,
         charts: chartsRef,
         familyIcon: familyIconRef,
+        activityIcon: activityIconRef,
         scanIcon: scanIconRef,
+        notificationsIcon: notificationsIconRef,
         settingsIcon: settingsIconRef,
       }} />
 
