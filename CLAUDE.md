@@ -96,6 +96,7 @@ Full codebase audit — no critical issues found. 3 warnings fixed:
 - Export date (`app/export/page.tsx`) changed from `setHours` to `setUTCHours` for correct UTC midnight boundary
 
 ## Future / planned
+- **Gender-based color theming** — dynamic color swap (lavender for female, blue for male) based on baby's gender field. Touches: babies table + forms, new useBabyColor() hook, dashboard, history badges, stat counters. ~5-6 files, 1-2 hours.
 - **Inventory tracking** — stock levels for diapers + food, restock notifications, Google Shopping deep-link for deals (full plan in `~/.claude/projects/-Users-rando/memory/inventory-tracking-plan.md`)
 - **Feed→Sleep correlation** — post-launch; code in `app/trends/page.tsx`, decide whether to surface in dashboard or revive trends page
 
