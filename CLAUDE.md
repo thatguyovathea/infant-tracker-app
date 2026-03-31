@@ -89,13 +89,13 @@ App is locked to portrait on iPhone and iPad via `Info.plist` and `capacitor.con
 17. **Baby photo avatar** — tappable "edit" link under avatar in edit mode, photo picked from camera roll, resized to 200x200 JPEG, stored in localStorage (no server upload). Falls back to 👶 emoji.
 18. **Privacy policy** — `/privacy` route, no auth required, covers all Apple requirements
 19. **App renamed** — "Infant Tracker" → "Care Tracking" across capacitor config, Info.plist, package.json, layout.tsx
-20. **First-time walkthrough** — 7-step one-time guided tour (welcome modal + 6 tooltip callouts). Solid indigo style, localStorage persistence, spotlight overlay. Steps: welcome → quick-log → activity drawer → charts → family/babies → barcode scanner → settings.
+20. **First-time walkthrough** — 9-step one-time guided tour (welcome modal + 8 tooltip callouts). Solid indigo style with frosted glass tooltips, localStorage persistence, spotlight overlay with indigo glow ring. Steps: welcome → quick-log → activity drawer → charts → family/babies → activity log → barcode scanner → notifications → settings.
+21. **App Store ready** — all metadata, screenshots, pricing, privacy, and build uploaded to App Store Connect. iPhone only (no iPad). Not yet submitted — pending TestFlight beta testing first.
 
 ## What is incomplete / pending ⏳
-- Walkthrough needs on-device testing (reset with `localStorage.removeItem("walkthrough-completed")`)
-- App Store screenshots + submission
-- Privacy policy URL needs to be set in App Store Connect (route exists at /privacy)
-- Demo account for Apple reviewers
+- TestFlight beta testing in progress — submit for App Store review after testers validate
+- TestFlight beta group created ("beta team"), add testers via email
+- Members showing 0 on Family page (display bug, not functional blocker)
 
 ## Audit completed (2026-03-31) ✅
 Full dead code audit — 54 files deleted, 6,703 lines removed:
@@ -121,9 +121,14 @@ Previous audit (2026-03-13) ✅ — 3 warnings fixed:
 - App name: "Care Tracking"
 - Bundle ID: com.infanttracker.app
 - Version: 1.0.0 (build 1)
+- Target: iPhone only (TARGETED_DEVICE_FAMILY = 1)
 - Icon: lavender moon-baby, full-bleed gradient, no border
 - Splash: matching lavender light + dark variants
-- Privacy policy at /privacy route
+- Privacy policy: https://thatguyovathea.github.io/infant-tracker-app/privacy.html (GitHub Pages, /docs folder)
+- Demo account: applereview@caretracking.app / Review2026!
+- Encryption: None (uses OS-level HTTPS only)
+- App Privacy: email + name collected, not used for tracking
+- TestFlight: internal group "beta team" created, ready for testers
 
 ## Key files
 - `app/dashboard/page.tsx` — main screen, quick-log, activity feed, offline queue, realtime, barcode scan, walkthrough
