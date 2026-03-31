@@ -147,13 +147,3 @@ export async function lookupGeneral(barcode: string): Promise<GeneralProduct | n
   return (await fetchAndCache(barcode)).general
 }
 
-// ─── Cache inspection (optional, useful for debugging) ───────────────────
-export function getCacheStats(): { entries: number; hits: string[] } {
-  const store = readStore()
-  return {
-    entries: Object.keys(store).length,
-    hits:    Object.entries(store)
-               .filter(([, v]) => v.food || v.general)
-               .map(([k]) => k),
-  }
-}

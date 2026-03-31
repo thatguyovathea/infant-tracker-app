@@ -1,13 +1,9 @@
 import type { Metadata, Viewport } from 'next'
-import { Geist, Geist_Mono } from 'next/font/google'
 import { ThemeProvider } from '@/components/theme-provider'
 import { ColorThemeProvider } from '@/lib/color-theme'
 import { Toaster } from '@/components/ui/sonner'
 import { EdgeSwipeBack } from '@/components/edge-swipe-back'
 import './globals.css'
-
-const _geist = Geist({ subsets: ["latin"] });
-const _geistMono = Geist_Mono({ subsets: ["latin"] });
 
 export const viewport: Viewport = {
   viewportFit: 'cover',

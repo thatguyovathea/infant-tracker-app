@@ -16,14 +16,6 @@ export function saveBabyPhoto(babyId: string, dataUrl: string): void {
   }
 }
 
-export function removeBabyPhoto(babyId: string): void {
-  try {
-    localStorage.removeItem(KEY_PREFIX + babyId)
-  } catch {
-    // ignore
-  }
-}
-
 export function resizeAndSave(babyId: string, file: File): Promise<string> {
   return new Promise((resolve, reject) => {
     const reader = new FileReader()

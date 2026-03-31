@@ -51,10 +51,6 @@ export function removeFromQueue(id: string) {
   localStorage.setItem(QUEUE_KEY, JSON.stringify(queue))
 }
 
-export function clearQueue() {
-  localStorage.removeItem(QUEUE_KEY)
-}
-
 /** Increment retry count for a queued item. Returns true if still under limit. */
 export function bumpRetry(id: string): boolean {
   const queue = readQueue()
