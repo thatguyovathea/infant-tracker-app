@@ -218,24 +218,13 @@ function BabyCard({ baby, familyId, onSaved, onDeleted }: { baby: Baby; familyId
     <div className="bg-muted/30 rounded-xl px-4 py-4 space-y-3">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <input
-            ref={fileInputRef}
-            type="file"
-            accept="image/*"
-            className="hidden"
-            onChange={handlePhotoSelect}
-          />
-          <button
-            type="button"
-            onClick={() => fileInputRef.current?.click()}
-            className={`w-12 h-12 rounded-full overflow-hidden shrink-0 flex items-center justify-center active:opacity-70 transition-opacity ${photo ? "bg-muted" : "border-2 border-dashed border-muted-foreground/40 bg-muted/30"}`}
-          >
+          <div className="w-12 h-12 rounded-full overflow-hidden shrink-0 bg-muted flex items-center justify-center">
             {photo ? (
               <img src={photo} alt={baby.name} className="w-full h-full object-cover" />
             ) : (
-              <span className="text-2xl">👶</span>
+              <span className="text-3xl">👶</span>
             )}
-          </button>
+          </div>
           <div>
             <p className="font-semibold">{baby.name}</p>
             {ageLabel && <p className="text-xs text-muted-foreground">{ageLabel}</p>}
@@ -259,6 +248,28 @@ function BabyCard({ baby, familyId, onSaved, onDeleted }: { baby: Baby; familyId
           <div className="space-y-1">
             <Label>Date of birth <span className="text-muted-foreground">(optional)</span></Label>
             <Input type="date" value={dob} onChange={e => setDob(e.target.value)} />
+          </div>
+          <div className="space-y-1">
+            <Label>Photo</Label>
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/*"
+              className="hidden"
+              onChange={handlePhotoSelect}
+            />
+            <div className="flex items-center gap-3">
+              <div className="w-14 h-14 rounded-full overflow-hidden shrink-0 bg-muted flex items-center justify-center">
+                {photo ? (
+                  <img src={photo} alt={baby.name} className="w-full h-full object-cover" />
+                ) : (
+                  <span className="text-3xl">👶</span>
+                )}
+              </div>
+              <Button type="button" variant="outline" size="sm" onClick={() => fileInputRef.current?.click()}>
+                {photo ? "Change photo" : "Add photo"}
+              </Button>
+            </div>
           </div>
           <Button type="submit" className="w-full" disabled={saving || !name.trim()}>
             {saving ? "Saving..." : "Save changes"}
