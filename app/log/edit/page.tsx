@@ -31,7 +31,7 @@ const SIDES = [
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function FeedingEdit({ record, onSave }: { record: any; onSave: () => void }) {
   const router = useRouter()
-  const [loggedAt, setLoggedAt] = useState(toLocalDateTimeValue(record.logged_at))
+  const [loggedAt, setLoggedAt] = useState(toLocalDateTimeValue(record.started_at))
   const [feedingType, setFeedingType] = useState(record.type ?? "breast")
   const [side, setSide] = useState(record.side ?? "left")
   const [duration, setDuration] = useState(record.duration_seconds ? String(Math.round(record.duration_seconds / 60)) : "")
@@ -49,7 +49,7 @@ function FeedingEdit({ record, onSave }: { record: any; onSave: () => void }) {
     if (!client) { router.replace("/login"); return }
 
     const { error } = await client.from("feeding_logs").update({
-      logged_at: new Date(loggedAt).toISOString(),
+      started_at: new Date(loggedAt).toISOString(),
       type: feedingType,
       side: feedingType === "breast" ? side : null,
       duration_seconds: feedingType !== "solid" && duration ? parseInt(duration) * 60 : null,
