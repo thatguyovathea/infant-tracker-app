@@ -31,6 +31,7 @@ const SIDES = [
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function FeedingEdit({ record, onSave }: { record: any; onSave: () => void }) {
   const router = useRouter()
+  const [loggedAt, setLoggedAt] = useState(toLocalDateTimeValue(record.logged_at))
   const [feedingType, setFeedingType] = useState(record.type ?? "breast")
   const [side, setSide] = useState(record.side ?? "left")
   const [duration, setDuration] = useState(record.duration_seconds ? String(Math.round(record.duration_seconds / 60)) : "")
@@ -48,6 +49,7 @@ function FeedingEdit({ record, onSave }: { record: any; onSave: () => void }) {
     if (!client) { router.replace("/login"); return }
 
     const { error } = await client.from("feeding_logs").update({
+      logged_at: new Date(loggedAt).toISOString(),
       type: feedingType,
       side: feedingType === "breast" ? side : null,
       duration_seconds: feedingType !== "solid" && duration ? parseInt(duration) * 60 : null,
@@ -66,6 +68,11 @@ function FeedingEdit({ record, onSave }: { record: any; onSave: () => void }) {
         <CardHeader><CardTitle>Edit feeding</CardTitle></CardHeader>
         <CardContent className="space-y-5">
           {error && <p className="text-sm text-destructive bg-destructive/10 px-3 py-2 rounded-md">{error}</p>}
+
+          <div className="space-y-2">
+            <Label>Time</Label>
+            <Input type="datetime-local" value={loggedAt} onChange={e => setLoggedAt(e.target.value)} required className="text-sm appearance-none" />
+          </div>
 
           <div className="space-y-2">
             <Label>Type</Label>
@@ -228,6 +235,7 @@ const DIAPER_TYPES = [
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function DiaperEdit({ record, onSave }: { record: any; onSave: () => void }) {
   const router = useRouter()
+  const [loggedAt, setLoggedAt] = useState(toLocalDateTimeValue(record.logged_at))
   const [type, setType] = useState(record.type ?? "wet")
   const [notes, setNotes] = useState(record.notes ?? "")
   const [saving, setSaving] = useState(false)
@@ -241,6 +249,7 @@ function DiaperEdit({ record, onSave }: { record: any; onSave: () => void }) {
     if (!client) { router.replace("/login"); return }
 
     const { error } = await client.from("diaper_logs").update({
+      logged_at: new Date(loggedAt).toISOString(),
       type,
       notes: notes || null,
     }).eq("id", record.id)
@@ -255,6 +264,11 @@ function DiaperEdit({ record, onSave }: { record: any; onSave: () => void }) {
         <CardHeader><CardTitle>Edit diaper</CardTitle></CardHeader>
         <CardContent className="space-y-5">
           {error && <p className="text-sm text-destructive bg-destructive/10 px-3 py-2 rounded-md">{error}</p>}
+
+          <div className="space-y-2">
+            <Label>Time</Label>
+            <Input type="datetime-local" value={loggedAt} onChange={e => setLoggedAt(e.target.value)} required className="text-sm appearance-none" />
+          </div>
 
           <div className="space-y-2">
             <Label>Type</Label>
