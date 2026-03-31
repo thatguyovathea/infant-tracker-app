@@ -6,7 +6,7 @@ import Link from "next/link"
 import { createClient } from "@/lib/supabase/client"
 import { getAuthedClient } from "@/lib/supabase/authed-client"
 import { formatDistanceToNow, differenceInMinutes, format } from "date-fns"
-import { Settings, Bell, ScanBarcode } from "lucide-react"
+import { Settings, Bell, ScanBarcode, ClipboardList } from "lucide-react"
 import { useDashboardBg } from "@/lib/dashboard-bg"
 import { BarcodeScannerModal } from "@/components/barcode-scanner-modal"
 import { canScan } from "@/lib/barcode-scanner"
@@ -750,9 +750,8 @@ export default function DashboardPage() {
               onMouseLeave={() => { dragStartY.current = null }}
             >
               <div className="w-10 h-1 rounded-full bg-muted-foreground/30" />
-              <div className="flex items-center justify-between w-full px-5">
+              <div className="flex items-center justify-center w-full px-5">
                 <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-widest leading-none m-0">Recent activity</p>
-                <button onClick={e => { e.stopPropagation(); router.push("/history") }} className="text-xs text-primary font-medium leading-none">See all</button>
               </div>
             </div>
             <div ref={drawerContentRef} className={`overflow-y-auto overflow-hidden transition-[max-height] duration-300 ease-out ${drawerOpen ? "max-h-[70vh]" : "max-h-0"}`}>
@@ -821,11 +820,14 @@ export default function DashboardPage() {
         </div>
       </div>
 
-      {/* Bottom ribbon — family | scan | bell */}
+      {/* Bottom ribbon — family | activity | scan | bell */}
       <div className="relative z-10 shrink-0 border-t bg-background" style={{ paddingBottom: "env(safe-area-inset-bottom)" }}>
-        <div className="flex items-center justify-between px-10 py-1 max-w-lg mx-auto w-full">
+        <div className="flex items-center justify-evenly px-6 py-1 max-w-lg mx-auto w-full">
           <button className="h-9 w-9 flex items-center justify-center rounded-md hover:bg-muted active:opacity-60" onClick={() => router.push("/family")}>
             <GroupIcon className="w-5 h-5" />
+          </button>
+          <button className="h-9 w-9 flex items-center justify-center rounded-md hover:bg-muted active:opacity-60" onClick={() => router.push("/history")}>
+            <ClipboardList className="w-5 h-5" />
           </button>
           {canScan() ? (
             <button className="h-9 w-9 flex items-center justify-center rounded-md hover:bg-muted active:opacity-60" onClick={() => setScanning(true)}>

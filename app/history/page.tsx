@@ -256,7 +256,7 @@ export default function HistoryPage() {
     <div className="min-h-screen bg-background">
       <header className="border-b px-4 py-3 flex items-center gap-3">
         <Button variant="ghost" size="sm" onClick={() => router.back()}>← Back</Button>
-        <h1 className="font-semibold">History</h1>
+        <h1 className="font-semibold">Activity</h1>
       </header>
 
       {/* Type filter */}
