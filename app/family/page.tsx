@@ -326,7 +326,7 @@ export default function FamilyPage() {
     const client = await getAuthedClient()
     if (!client) { router.replace("/login"); return }
     const { data, error } = await client.from("babies").insert({ name: newName.trim(), family_id: family.id, date_of_birth: newDob || null }).select().single()
-    if (error) { setAddError(error.message); setAdding(false); return }
+    if (error) { setAddError(error.message); setAdding(false); console.error("Add baby error:", error); alert("Add baby failed: " + error.message); return }
     setBabies(prev => [...prev, data])
     setNewName(""); setNewDob(""); setShowAdd(false); setAdding(false)
   }
