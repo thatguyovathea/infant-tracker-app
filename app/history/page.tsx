@@ -25,10 +25,10 @@ type LogItem = {
 const PAGE_SIZE = 30
 
 const typeColors: Record<string, string> = {
-  feeding: "bg-sky-400/40 border-sky-400/60 text-sky-800 backdrop-blur-sm",
-  sleep:   "bg-violet-400/40 border-violet-400/60 text-violet-800 backdrop-blur-sm",
-  diaper:  "bg-emerald-400/40 border-emerald-400/60 text-emerald-800 backdrop-blur-sm",
-  growth:  "bg-amber-400/40 border-amber-400/60 text-amber-800 backdrop-blur-sm",
+  feeding: "bg-sky-500/20 border-sky-400/60 text-sky-300 backdrop-blur-sm",
+  sleep:   "bg-violet-500/20 border-violet-400/60 text-violet-300 backdrop-blur-sm",
+  diaper:  "bg-emerald-500/20 border-emerald-400/60 text-emerald-300 backdrop-blur-sm",
+  growth:  "bg-amber-500/20 border-amber-400/60 text-amber-300 backdrop-blur-sm",
 }
 
 const typeEmoji: Record<string, string> = {
