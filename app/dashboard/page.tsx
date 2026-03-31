@@ -589,17 +589,17 @@ export default function DashboardPage() {
                 <div key={s.babyId} className="px-5 py-2 max-w-lg mx-auto w-full">
                   <div className="grid grid-cols-3 gap-2">
                     <button onClick={() => setSheet({ type: "feeding", babyId: s.babyId })}
-                      className="flex items-center justify-center gap-2 py-4 rounded-2xl active:opacity-60 transition-opacity bg-sky-400/25 border border-sky-400/50">
+                      className="flex items-center justify-center gap-2 py-4 rounded-2xl active:opacity-60 transition-opacity bg-sky-400/25">
                       <span className="text-2xl">🍼</span>
                       <span className="text-xl font-bold text-sky-200">{s.feedings}</span>
                     </button>
                     <button onClick={() => setSheet({ type: "sleep", babyId: s.babyId })}
-                      className="flex items-center justify-center gap-2 py-4 rounded-2xl active:opacity-60 transition-opacity bg-violet-400/25 border border-violet-400/50">
+                      className="flex items-center justify-center gap-2 py-4 rounded-2xl active:opacity-60 transition-opacity bg-violet-400/25">
                       <span className="text-2xl">😴</span>
                       <span className="text-xl font-bold text-violet-200">{sleepStr}</span>
                     </button>
                     <button onClick={() => setSheet({ type: "diaper", babyId: s.babyId })}
-                      className="flex items-center justify-center gap-2 py-4 rounded-2xl active:opacity-60 transition-opacity bg-emerald-400/25 border border-emerald-400/50">
+                      className="flex items-center justify-center gap-2 py-4 rounded-2xl active:opacity-60 transition-opacity bg-emerald-400/25">
                       <span className="text-2xl">🧷</span>
                       <span className="text-xl font-bold text-emerald-200">{s.diapers}</span>
                     </button>
