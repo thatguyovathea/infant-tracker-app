@@ -228,12 +228,12 @@ function BabyCard({ baby, familyId, onSaved, onDeleted }: { baby: Baby; familyId
           <button
             type="button"
             onClick={() => fileInputRef.current?.click()}
-            className="w-12 h-12 rounded-full overflow-hidden shrink-0 bg-muted flex items-center justify-center active:opacity-70 transition-opacity"
+            className={`w-12 h-12 rounded-full overflow-hidden shrink-0 flex items-center justify-center active:opacity-70 transition-opacity ${photo ? "bg-muted" : "border-2 border-dashed border-muted-foreground/40 bg-muted/30"}`}
           >
             {photo ? (
               <img src={photo} alt={baby.name} className="w-full h-full object-cover" />
             ) : (
-              <span className="text-3xl">👶</span>
+              <span className="text-2xl">👶</span>
             )}
           </button>
           <div>
