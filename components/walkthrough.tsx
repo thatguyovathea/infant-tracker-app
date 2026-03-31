@@ -229,7 +229,7 @@ export function Walkthrough({ refs }: WalkthroughProps) {
         onClick={advance}
         style={{
           position: "fixed", inset: 0, zIndex: 10001,
-          background: "rgba(15, 23, 42, 0.75)",
+          background: "rgba(15, 23, 42, 0.85)",
           ...(sr ? {
             clipPath: `polygon(
               0% 0%, 0% 100%,
@@ -244,6 +244,21 @@ export function Walkthrough({ refs }: WalkthroughProps) {
           } : {}),
         }}
       />
+
+      {/* Glow ring around highlighted element */}
+      {sr && (
+        <div
+          style={{
+            position: "fixed", zIndex: 10001, pointerEvents: "none",
+            left: sr.left - spotlightPad,
+            top: sr.top - spotlightPad,
+            width: sr.width + spotlightPad * 2,
+            height: sr.height + spotlightPad * 2,
+            borderRadius: 12,
+            boxShadow: "0 0 0 2px rgba(99, 102, 241, 0.6), 0 0 20px 4px rgba(99, 102, 241, 0.3)",
+          }}
+        />
+      )}
 
       {/* Tooltip */}
       <div style={{ ...tooltipStyle, position: "fixed" }}>
