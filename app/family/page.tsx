@@ -19,7 +19,7 @@ import { useRef } from "react"
 
 type Baby = { id: string; name: string; date_of_birth: string | null }
 type Member = { user_id: string; role: string; joined_at: string; display_name: string | null }
-type Family = { id: string; name: string; invite_code: string }
+type Family = { id: string; name: string; invite_code: string; invite_code_expires_at: string | null }
 type Note = { id: string; content: string; created_at: string }
 type GrowthLog = { id: string; measured_at: string; weight_kg: number | null; height_cm: number | null; head_cm: number | null; notes: string | null }
 
@@ -331,7 +331,7 @@ export default function FamilyPage() {
       if (!membership) { router.replace("/onboarding"); return }
 
       const [{ data: familyData }, { data: membersData }, { data: babiesData }] = await Promise.all([
-        client.from("families").select("id, name, invite_code").eq("id", membership.family_id).limit(1).single(),
+        client.from("families").select("id, name, invite_code, invite_code_expires_at").eq("id", membership.family_id).limit(1).single(),
         client.from("family_members").select("user_id, role, joined_at, profiles(display_name)").eq("family_id", membership.family_id).order("joined_at", { ascending: true }),
         client.from("babies").select("id, name, date_of_birth").eq("family_id", membership.family_id).order("created_at"),
       ])
@@ -357,6 +357,17 @@ export default function FamilyPage() {
       setTimeout(() => setCopied(false), 2000)
     } catch {
       // Clipboard API unavailable — user can copy the code manually
+    }
+  }
+
+  async function regenerateInviteCode() {
+    if (!family) return
+    const client = await getAuthedClient()
+    if (!client) { router.replace("/login"); return }
+    const { data, error } = await client.rpc("regenerate_invite_code", { target_family_id: family.id })
+    if (error) { console.error("regenerate invite code:", error); return }
+    if (data?.[0]) {
+      setFamily({ ...family, invite_code: data[0].new_code, invite_code_expires_at: data[0].expires_at })
     }
   }
 
@@ -520,6 +531,18 @@ export default function FamilyPage() {
             <span className="font-mono text-xl tracking-widest font-bold">{family?.invite_code}</span>
             <Button size="sm" variant="outline" onClick={copyInviteCode}>{copied ? "Copied!" : "Copy"}</Button>
           </div>
+          {family?.invite_code_expires_at && (
+            <p className={`text-xs ${new Date(family.invite_code_expires_at) < new Date() ? "text-destructive font-medium" : "text-muted-foreground"}`}>
+              {new Date(family.invite_code_expires_at) < new Date()
+                ? "Expired — regenerate to invite new members"
+                : `Expires ${format(new Date(family.invite_code_expires_at), "MMM d, yyyy")}`}
+            </p>
+          )}
+          {isAdmin && (
+            <Button size="sm" variant="outline" className="w-full" onClick={regenerateInviteCode}>
+              Regenerate code
+            </Button>
+          )}
         </section>
 
         {/* ── Leave Family ── */}

@@ -58,7 +58,10 @@ export default function OnboardingPage() {
       .rpc("lookup_family_by_invite", { code: invite_code })
 
     if (findError || !familyId) {
-      setError("Invalid invite code. Please check and try again.")
+      const msg = findError?.message?.includes("Too many attempts")
+        ? "Too many attempts. Please wait a few minutes and try again."
+        : "Invalid or expired invite code. Ask your family admin for a new one."
+      setError(msg)
       setLoading(false)
       return
     }

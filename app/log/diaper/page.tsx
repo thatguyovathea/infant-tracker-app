@@ -78,7 +78,7 @@ function DiaperForm() {
       title: `${displayName} logged a diaper change`,
       body: `${typeLabel} for ${babyName}`,
       reference_id: diaperRow?.id ?? null,
-    }).then(() => {}).catch(err => console.error("[notification]", err))
+    }).then(({ error: nErr }) => { if (nErr) console.error("[notification]", nErr) })
     router.replace("/dashboard")
   }
 

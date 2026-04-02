@@ -125,7 +125,7 @@ Previous audit (2026-03-13) ✅ — 3 warnings fixed:
 - Icon: lavender moon-baby, full-bleed gradient, no border
 - Splash: matching lavender light + dark variants
 - Privacy policy: https://thatguyovathea.github.io/infant-tracker-app/privacy.html (GitHub Pages, /docs folder)
-- Demo account: applereview@caretracking.app / Review2026!
+- Demo account: stored in App Store Connect test info (DO NOT commit credentials to repo)
 - Encryption: None (uses OS-level HTTPS only)
 - App Privacy: email + name collected, not used for tracking
 - TestFlight: internal group "beta team" created, ready for testers

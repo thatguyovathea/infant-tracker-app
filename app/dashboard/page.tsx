@@ -54,13 +54,15 @@ function saveLocalPrefs(prefs: QuickPrefs) {
   localStorage.setItem(PREFS_KEY, JSON.stringify(prefs))
 }
 
-async function loadRemotePrefs(client: ReturnType<typeof import("@supabase/supabase-js").createClient>, userId: string): Promise<QuickPrefs | null> {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+async function loadRemotePrefs(client: any, userId: string): Promise<QuickPrefs | null> {
   const { data } = await client.from("user_preferences").select("quick_prefs").eq("user_id", userId).maybeSingle()
   if (!data?.quick_prefs) return null
   return { ...DEFAULT_PREFS, ...data.quick_prefs }
 }
 
-async function saveRemotePrefs(client: ReturnType<typeof import("@supabase/supabase-js").createClient>, userId: string, prefs: QuickPrefs) {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+async function saveRemotePrefs(client: any, userId: string, prefs: QuickPrefs) {
   await client.from("user_preferences").upsert({ user_id: userId, quick_prefs: prefs, updated_at: new Date().toISOString() })
 }
 
@@ -351,7 +353,7 @@ export default function DashboardPage() {
             if (error) ok = false
           }
           if (ok) {
-            if (item.notification) await client.from("notifications").insert(item.notification).catch(() => {})
+            if (item.notification) try { await client.from("notifications").insert(item.notification) } catch { /* best-effort */ }
             removeFromQueue(item.id)
           } else if (!bumpRetry(item.id)) {
             dropped++
@@ -498,7 +500,7 @@ export default function DashboardPage() {
         if (offline) {
           const localId = crypto.randomUUID()
           setActiveSleep({ id: localId, babyId, startedAt })
-          setActivity(prev => [{ id: localId, type: "sleep", label: "Sleep started", timestamp: startedAt, babyId }, ...prev].slice(0, 15))
+          setActivity(prev => [{ id: localId, type: "sleep" as const, label: "Sleep started", timestamp: startedAt, babyId }, ...prev].slice(0, 15))
           enqueue({ id: crypto.randomUUID(), queuedAt: new Date().toISOString(), operation: "insert", table: "sleep_logs", data: sleepData, notification: notifData })
           setPendingCount(c => c + 1)
         } else {
@@ -506,13 +508,13 @@ export default function DashboardPage() {
             const { data } = await client.from("sleep_logs").insert(sleepData).select().single()
             if (data) {
               setActiveSleep({ id: data.id, babyId, startedAt: data.started_at })
-              setActivity(prev => [{ id: data.id, type: "sleep", label: "Sleep started", timestamp: data.started_at, babyId }, ...prev].slice(0, 15))
+              setActivity(prev => [{ id: data.id, type: "sleep" as const, label: "Sleep started", timestamp: data.started_at, babyId }, ...prev].slice(0, 15))
               await client.from("notifications").insert({ ...notifData, reference_id: data.id })
             }
           } catch {
             const localId = crypto.randomUUID()
             setActiveSleep({ id: localId, babyId, startedAt })
-            setActivity(prev => [{ id: localId, type: "sleep", label: "Sleep started", timestamp: startedAt, babyId }, ...prev].slice(0, 15))
+            setActivity(prev => [{ id: localId, type: "sleep" as const, label: "Sleep started", timestamp: startedAt, babyId }, ...prev].slice(0, 15))
             enqueue({ id: crypto.randomUUID(), queuedAt: new Date().toISOString(), operation: "insert", table: "sleep_logs", data: sleepData, notification: notifData })
             setPendingCount(c => c + 1)
           }

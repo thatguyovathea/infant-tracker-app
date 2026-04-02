@@ -86,7 +86,7 @@ function SleepForm() {
       title: endedAtISO ? `${displayName} logged sleep` : `${displayName} started sleep`,
       body: endedAtISO ? `${babyName} slept` : `${babyName} is now sleeping`,
       reference_id: sleepRow?.id ?? null,
-    }).then(() => {}).catch(err => console.error("[notification]", err))
+    }).then(({ error: nErr }) => { if (nErr) console.error("[notification]", nErr) })
     router.replace("/dashboard")
   }
 

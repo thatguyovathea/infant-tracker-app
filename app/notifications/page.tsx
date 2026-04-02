@@ -61,8 +61,7 @@ export default function NotificationsPage() {
         await Promise.all(
           unread.map(n =>
             client.rpc("mark_notification_read", { notification_id: n.id })
-              .then(() => {})
-              .catch(err => console.error("[notifications] mark read", err))
+              .then(({ error: rErr }) => { if (rErr) console.error("[notifications] mark read", rErr) })
           )
         )
 
