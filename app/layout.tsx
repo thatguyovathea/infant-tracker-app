@@ -3,6 +3,7 @@ import { ThemeProvider } from '@/components/theme-provider'
 import { ColorThemeProvider } from '@/lib/color-theme'
 import { Toaster } from '@/components/ui/sonner'
 import { EdgeSwipeBack } from '@/components/edge-swipe-back'
+import { SentryInit } from '@/components/sentry-init'
 import './globals.css'
 
 export const viewport: Viewport = {
@@ -42,6 +43,7 @@ export default function RootLayout({
       <body className="font-sans antialiased">
         <ThemeProvider attribute="class" defaultTheme="light" themes={["light", "dim", "dark"]} disableTransitionOnChange>
           <ColorThemeProvider>
+            <SentryInit />
             <EdgeSwipeBack />
             {children}
             <Toaster position="bottom-center" />

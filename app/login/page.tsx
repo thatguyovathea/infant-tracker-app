@@ -70,6 +70,11 @@ export default function LoginPage() {
               <Label htmlFor="password">Password</Label>
               <Input id="password" name="password" type="password" required autoComplete="current-password" />
             </div>
+            <div className="text-right">
+              <Link href="/reset-password" className="text-xs text-muted-foreground underline underline-offset-4">
+                Forgot password?
+              </Link>
+            </div>
           </CardContent>
           <CardFooter className="flex flex-col gap-3">
             <Button type="submit" className="w-full" disabled={loading}>

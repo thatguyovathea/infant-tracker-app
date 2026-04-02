@@ -26,6 +26,8 @@ export default function SettingsPage() {
   const [saving, setSaving] = useState(false)
   const [saved, setSaved] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [confirmDelete, setConfirmDelete] = useState(false)
+  const [deleting, setDeleting] = useState(false)
 
   useEffect(() => {
     async function load() {
@@ -76,7 +78,54 @@ export default function SettingsPage() {
   async function handleSignOut() {
     const supabase = createClient()
     await supabase.auth.signOut()
+    // Clear all cached PII from localStorage
+    try {
+      localStorage.removeItem("dash-cache-v3")
+      localStorage.removeItem("infant-tracker-offline-queue")
+      localStorage.removeItem("infant-tracker-quick-prefs")
+      localStorage.removeItem("barcode-cache")
+      // Remove baby avatar photos
+      Object.keys(localStorage)
+        .filter(k => k.startsWith("baby-avatar-"))
+        .forEach(k => localStorage.removeItem(k))
+    } catch { /* localStorage unavailable */ }
     router.replace("/login")
+  }
+
+  async function handleDeleteAccount() {
+    setDeleting(true)
+    try {
+      const client = await getAuthedClient()
+      if (!client) { router.replace("/login"); return }
+      const { data: { session } } = await createClient().auth.getSession()
+      if (!session) { router.replace("/login"); return }
+
+      const res = await fetch(
+        `${process.env.NEXT_PUBLIC_SUPABASE_URL}/functions/v1/delete-account`,
+        {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${session.access_token}`,
+            "Content-Type": "application/json",
+          },
+        }
+      )
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({}))
+        setError(body.error || "Failed to delete account")
+        setDeleting(false)
+        return
+      }
+
+      // Clear local data and redirect
+      try {
+        localStorage.clear()
+      } catch { /* ok */ }
+      router.replace("/login")
+    } catch {
+      setError("Failed to delete account. Please try again.")
+      setDeleting(false)
+    }
   }
 
   if (loading) return (
@@ -312,6 +361,26 @@ export default function SettingsPage() {
               <span>Sign out</span>
               <span>→</span>
             </button>
+            <Separator />
+            {!confirmDelete ? (
+              <button
+                className="w-full flex items-center justify-between px-6 py-4 text-sm text-destructive/70 hover:bg-destructive/5 transition-colors"
+                onClick={() => setConfirmDelete(true)}
+              >
+                <span>Delete account</span>
+                <span>→</span>
+              </button>
+            ) : (
+              <div className="px-6 py-4 space-y-3">
+                <p className="text-sm text-destructive font-medium">This will permanently delete your account, remove you from all families, and erase all your data. This cannot be undone.</p>
+                <div className="flex gap-2">
+                  <Button variant="outline" className="flex-1" size="sm" onClick={() => setConfirmDelete(false)} disabled={deleting}>Cancel</Button>
+                  <Button variant="destructive" className="flex-1" size="sm" onClick={handleDeleteAccount} disabled={deleting}>
+                    {deleting ? "Deleting..." : "Yes, delete"}
+                  </Button>
+                </div>
+              </div>
+            )}
           </CardContent>
         </Card>
 

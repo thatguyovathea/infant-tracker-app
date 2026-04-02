@@ -388,17 +388,11 @@ export default function FamilyPage() {
     setTransferring(true)
     const client = await getAuthedClient()
     if (!client) { router.replace("/login"); return }
-    // Promote target to admin
-    const { error: promoteErr } = await client.from("family_members").update({ role: "admin" }).eq("user_id", targetUserId).eq("family_id", family.id)
-    if (promoteErr) { setTransferring(false); return }
-    // Demote self to member
-    const { error: demoteErr } = await client.from("family_members").update({ role: "member" }).eq("user_id", currentUserId).eq("family_id", family.id)
-    if (demoteErr) {
-      // Rollback: demote target back since we couldn't demote self
-      await client.from("family_members").update({ role: "member" }).eq("user_id", targetUserId).eq("family_id", family.id)
-      setTransferring(false)
-      return
-    }
+    const { error } = await client.rpc("transfer_admin", {
+      target_family_id: family.id,
+      new_admin_id: targetUserId,
+    })
+    if (error) { console.error("transfer_admin:", error); setTransferring(false); return }
     setMembers(prev => prev.map(m => {
       if (m.user_id === targetUserId) return { ...m, role: "admin" }
       if (m.user_id === currentUserId) return { ...m, role: "member" }
