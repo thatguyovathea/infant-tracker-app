@@ -75,16 +75,27 @@ App is locked to portrait on iPhone and iPad via `Info.plist` and `capacitor.con
 15. **Barcode scanning** — @zxing/browser via WKWebView camera; scan icon in dashboard header; auto-categorizes (food → /log/feeding, other → /log/diaper); allergen tags in feeding form; two-tier cache (memory + localStorage, 1yr TTL for hits, 30d for misses); Open Food Facts + UPC Item DB lookup
 16. **Push notifications** — APNs JWT auth (.p8 key), device token registration via Capacitor, Supabase Edge Function `send-push`, triggered by DB webhook on notifications INSERT. Tested and working on device 2026-03-13.
 
-## E2E Testing (added 2026-03-16)
+## E2E Testing (updated 2026-04-02)
 - `@playwright/test` installed as devDependency
 - `playwright.config.ts` — Chromium only, reuses dev server, list reporter
 - `tests/e2e/auth.setup.ts` — logs in once, saves browser storage state to `tests/.auth/user.json`
 - `tests/e2e/login.test.ts` — form renders, bad credentials error, auto-redirect when authed
-- `tests/e2e/dashboard.test.ts` — buttons visible, nav to log forms, unauth redirect
+- `tests/e2e/dashboard.test.ts` — quick-log circle taps, success flash, unauth redirect
 - `tests/e2e/log-forms.test.ts` — feeding/sleep/diaper render + unauth redirects (no DB writes)
-- `.env.test.local.example` — template; copy to `.env.test.local` with TEST_EMAIL + TEST_PASSWORD
-- Run: `npm run test:e2e` | UI mode: `npm run test:e2e:ui`
-- Tests run BEFORE `npm run build` in pre-deploy checklist
+- `tests/e2e/edge-cases.test.ts` — 15 edge case scenarios (offline, concurrent, boundary, barcode, session)
+- `tests/e2e/security.test.ts` — 18 security tests (route protection, CSP, XSS, auth, PII cleanup)
+- `.env.test.local` — requires TEST_EMAIL, TEST_PASSWORD, NEXT_PUBLIC_SUPABASE_URL, NEXT_PUBLIC_SUPABASE_ANON_KEY
+- Run: `set -a && source .env.test.local && set +a && npx playwright test`
+- **49 tests, 0 failures, 0 skips** as of 2026-04-02
+
+## Security hardening (2026-04-02) ✅
+- CSP, X-Content-Type-Options, Referrer-Policy meta tags in layout.tsx
+- Session timeout (30min idle) — lib/session-timeout.ts + components/session-timeout-guard.tsx
+- Delete-account CORS restricted to app origins (no wildcard)
+- Signup password minimum: 8 characters
+- RLS cross-family isolation verified (scripts/test_rls_isolation.sql)
+- Gitleaks pre-commit hook installed
+- Red team score: 38/100 → 72/100 (remaining deductions: CSP unsafe-inline required by Next.js static export, dev-only npm audit vulns in @capacitor/assets)
 
 17. **Baby photo avatar** — tappable "edit" link under avatar in edit mode, photo picked from camera roll, resized to 200x200 JPEG, stored in localStorage (no server upload). Falls back to 👶 emoji.
 18. **Privacy policy** — `/privacy` route, no auth required, covers all Apple requirements
@@ -93,8 +104,7 @@ App is locked to portrait on iPhone and iPad via `Info.plist` and `capacitor.con
 21. **App Store ready** — all metadata, screenshots, pricing, privacy, and build uploaded to App Store Connect. iPhone only (no iPad). Not yet submitted — pending TestFlight beta testing first.
 
 ## What is incomplete / pending ⏳
-- TestFlight beta testing in progress — submit for App Store review after testers validate
-- TestFlight beta group created ("beta team"), add testers via email
+- App Store review: v1.0.0 build 2 uploaded, rejected for 5.1.1(v) — account deletion not visible to reviewer. Delete account feature exists in Settings, need screen recording demo for resubmission.
 - Members showing 0 on Family page (display bug, not functional blocker)
 
 ## Audit completed (2026-03-31) ✅
@@ -117,10 +127,10 @@ Previous audit (2026-03-13) ✅ — 3 warnings fixed:
 - **Inventory tracking** — stock levels for diapers + food, restock notifications, Google Shopping deep-link for deals (full plan in `~/.claude/projects/-Users-rando/memory/inventory-tracking-plan.md`)
 - **Feed→Sleep correlation** — post-launch; code in `app/trends/page.tsx`, decide whether to surface in dashboard or revive trends page
 
-## App Store prep (2026-03-31)
+## App Store prep (2026-04-02)
 - App name: "Care Tracking"
 - Bundle ID: com.infanttracker.app
-- Version: 1.0.0 (build 1)
+- Version: 1.0.0 (build 2)
 - Target: iPhone only (TARGETED_DEVICE_FAMILY = 1)
 - Icon: lavender moon-baby, full-bleed gradient, no border
 - Splash: matching lavender light + dark variants
@@ -146,6 +156,8 @@ Previous audit (2026-03-13) ✅ — 3 warnings fixed:
 - `components/barcode-scanner-modal.tsx` — full-screen camera scanner using @zxing/browser
 - `lib/supabase/authed-client.ts` — critical auth pattern for Capacitor
 - `lib/offline-queue.ts` — offline queue read/write/sync
+- `lib/session-timeout.ts` — 30-min idle session timeout
+- `components/session-timeout-guard.tsx` — session timeout React wrapper
 - `lib/push-notifications.ts` — APNs token registration (iOS only)
 - `supabase/functions/send-push/index.ts` — Edge function for APNs delivery
 - `scripts/` — SQL migration files (run manually in Supabase SQL editor)
