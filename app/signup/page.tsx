@@ -67,7 +67,8 @@ export default function SignupPage() {
             </div>
             <div className="space-y-2">
               <Label htmlFor="password">Password</Label>
-              <Input id="password" name="password" type="password" required autoComplete="new-password" minLength={6} />
+              <Input id="password" name="password" type="password" required autoComplete="new-password" minLength={8} />
+              <p className="text-xs text-muted-foreground">At least 8 characters</p>
             </div>
           </CardContent>
           <CardFooter className="flex flex-col gap-3">

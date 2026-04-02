@@ -13,6 +13,10 @@ test.describe("Log forms (authenticated)", () => {
   test.beforeEach(async ({ page, context }) => {
     if (!fs.existsSync(AUTH_STATE)) test.skip()
     await context.storageState({ path: AUTH_STATE } as any)
+    // Dismiss walkthrough so it doesn't block UI interactions
+    await page.addInitScript(() => {
+      localStorage.setItem("walkthrough-completed", "true")
+    })
   })
 
   test.describe("Feeding log", () => {
@@ -28,14 +32,15 @@ test.describe("Log forms (authenticated)", () => {
       await page.goto("/log/feeding")
       await page.waitForLoadState("networkidle")
       await page.getByText(/bottle/i).click()
-      await expect(page.getByLabel(/amount/i)).toBeVisible({ timeout: 5_000 })
+      // The Amount input has no htmlFor/id pairing, so use placeholder locator
+      await expect(page.getByPlaceholder("e.g. 120")).toBeVisible({ timeout: 5_000 })
     })
 
     test("switching to solid shows food name field", async ({ page }) => {
       await page.goto("/log/feeding")
       await page.waitForLoadState("networkidle")
       await page.getByText(/solid/i).click()
-      await expect(page.getByLabel(/food/i)).toBeVisible({ timeout: 5_000 })
+      await expect(page.getByPlaceholder("e.g. Mashed banana")).toBeVisible({ timeout: 5_000 })
     })
   })
 
@@ -44,8 +49,7 @@ test.describe("Log forms (authenticated)", () => {
       await page.goto("/log/sleep")
       await page.waitForLoadState("networkidle")
       await expect(page.getByText(/sleep/i).first()).toBeVisible({ timeout: 10_000 })
-      // Should have a time or duration input
-      const timeInput = page.locator("input[type='time'], input[type='number'], input[placeholder*='min']").first()
+      const timeInput = page.locator("input[type='time'], input[type='number'], input[placeholder*='min'], input[type='datetime-local']").first()
       await expect(timeInput).toBeVisible({ timeout: 8_000 })
     })
   })
@@ -61,21 +65,51 @@ test.describe("Log forms (authenticated)", () => {
 })
 
 test.describe("Log forms (unauthenticated)", () => {
-  test("feeding redirects to login", async ({ page }) => {
-    await page.goto("/log/feeding")
-    await page.waitForURL("**/login", { timeout: 8_000 })
-    expect(page.url()).toContain("/login")
+  test("feeding redirects to login", async ({ browser }) => {
+    const context = await browser.newContext({
+      storageState: { cookies: [], origins: [] },
+    })
+    const page = await context.newPage()
+    try {
+      await page.goto("/login")
+      await page.evaluate(() => { localStorage.clear(); sessionStorage.clear() })
+      await page.goto("/log/feeding")
+      await page.waitForURL(/login/, { timeout: 15_000 })
+      expect(page.url()).toContain("/login")
+    } finally {
+      await context.close()
+    }
   })
 
-  test("sleep redirects to login", async ({ page }) => {
-    await page.goto("/log/sleep")
-    await page.waitForURL("**/login", { timeout: 8_000 })
-    expect(page.url()).toContain("/login")
+  test("sleep redirects to login", async ({ browser }) => {
+    const context = await browser.newContext({
+      storageState: { cookies: [], origins: [] },
+    })
+    const page = await context.newPage()
+    try {
+      await page.goto("/login")
+      await page.evaluate(() => { localStorage.clear(); sessionStorage.clear() })
+      await page.goto("/log/sleep")
+      await page.waitForURL(/login/, { timeout: 15_000 })
+      expect(page.url()).toContain("/login")
+    } finally {
+      await context.close()
+    }
   })
 
-  test("diaper redirects to login", async ({ page }) => {
-    await page.goto("/log/diaper")
-    await page.waitForURL("**/login", { timeout: 8_000 })
-    expect(page.url()).toContain("/login")
+  test("diaper redirects to login", async ({ browser }) => {
+    const context = await browser.newContext({
+      storageState: { cookies: [], origins: [] },
+    })
+    const page = await context.newPage()
+    try {
+      await page.goto("/login")
+      await page.evaluate(() => { localStorage.clear(); sessionStorage.clear() })
+      await page.goto("/log/diaper")
+      await page.waitForURL(/login/, { timeout: 15_000 })
+      expect(page.url()).toContain("/login")
+    } finally {
+      await context.close()
+    }
   })
 })

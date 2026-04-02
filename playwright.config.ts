@@ -18,10 +18,13 @@ export default defineConfig({
       name: "setup",
       testMatch: /auth\.setup\.ts/,
     },
-    // 2. Run all other tests (auth state loaded per-test where needed)
+    // 2. Run all other tests with auth state pre-loaded
     {
       name: "chromium",
-      use: { ...devices["Desktop Chrome"] },
+      use: {
+        ...devices["Desktop Chrome"],
+        storageState: "tests/.auth/user.json",
+      },
       dependencies: ["setup"],
     },
   ],
