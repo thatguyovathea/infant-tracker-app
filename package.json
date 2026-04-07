@@ -11,7 +11,7 @@
     "test:e2e:ui": "playwright test --ui"
   },
   "dependencies": {
-    "@capacitor/cli": "^8.1.0",
+    "@capacitor/cli": "^8.3.0",
     "@capacitor/core": "^8.1.0",
     "@capacitor/ios": "^8.1.0",
     "@capacitor/push-notifications": "^8.0.1",
