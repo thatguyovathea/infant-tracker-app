@@ -18,9 +18,3 @@ export function initSentry() {
   })
   initialized = true
 }
-
-export function captureError(error: unknown, context?: Record<string, unknown>) {
-  if (!initialized) initSentry()
-  if (context) Sentry.setContext("extra", context)
-  Sentry.captureException(error)
-}

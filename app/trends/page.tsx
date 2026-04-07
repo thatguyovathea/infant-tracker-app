@@ -2,8 +2,8 @@
 
 import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
-import { createClient } from "@/lib/supabase/client"
 import { getAuthedClient } from "@/lib/supabase/authed-client"
+import { useAuthFamily } from "@/lib/use-auth-family"
 import { Button } from "@/components/ui/button"
 import { format, subDays, eachDayOfInterval, differenceInMinutes } from "date-fns"
 import { useUnits, kgToLbs, cmToIn, weightLabel, lengthLabel } from "@/lib/units"
@@ -13,7 +13,6 @@ import {
 } from "recharts"
 
 type Range = 7 | 14 | 30
-type Baby = { id: string; name: string }
 type GrowthPoint = { date: string; weight_kg: number | null; height_cm: number | null; head_cm: number | null }
 
 type DayData = {
@@ -49,32 +48,15 @@ function CustomTooltip({ active, payload, label, unit }: any) {
 
 export default function TrendsPage() {
   const router = useRouter()
+  const { babies, familyId, loading: authLoading } = useAuthFamily({ skipProfile: true })
   const [range, setRange] = useState<Range>(7)
-  const [babies, setBabies] = useState<Baby[]>([])
   const [selectedBabyId, setSelectedBabyId] = useState<string | null>(null)
   const [data, setData] = useState<DayData[]>([])
   const [loading, setLoading] = useState(true)
-  const [familyId, setFamilyId] = useState<string | null>(null)
   const [growthData, setGrowthData] = useState<GrowthPoint[]>([])
 
   type CorrelationPoint = { type: string; latencyMins: number; durationMins: number; count: number }
   const [correlationData, setCorrelationData] = useState<CorrelationPoint[]>([])
-
-  useEffect(() => {
-    async function init() {
-      const supabase = createClient()
-      const { data: { session } } = await supabase.auth.getSession()
-      if (!session) { router.replace("/login"); return }
-      const client = await getAuthedClient()
-      if (!client) { router.replace("/login"); return }
-      const { data: m } = await client.from("family_members").select("family_id").eq("user_id", session.user.id).limit(1).maybeSingle()
-      if (!m) { router.replace("/onboarding"); return }
-      setFamilyId(m.family_id)
-      const { data: babiesData } = await client.from("babies").select("id, name").eq("family_id", m.family_id).order("created_at")
-      setBabies(babiesData ?? [])
-    }
-    init().catch(() => {})
-  }, [router])
 
   useEffect(() => {
     if (!familyId) return

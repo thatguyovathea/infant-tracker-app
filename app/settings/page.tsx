@@ -43,6 +43,7 @@ export default function SettingsPage() {
         .from("profiles")
         .select("display_name")
         .eq("id", session.user.id)
+        .limit(1)
         .maybeSingle()
 
       setDisplayName(profile?.display_name ?? "")

@@ -1,0 +1,10 @@
+{"type":"server-started","port":58289,"host":"127.0.0.1","url_host":"localhost","url":"http://localhost:58289","screen_dir":"/Users/rando/v0-infant-tracker-app/.superpowers/brainstorm/30908-1774979055/content","state_dir":"/Users/rando/v0-infant-tracker-app/.superpowers/brainstorm/30908-1774979055/state"}
+{"type":"screen-added","file":"/Users/rando/v0-infant-tracker-app/.superpowers/brainstorm/30908-1774979055/content/walkthrough-steps.html"}
+{"source":"user-event","type":"click","text":"C\n    \n      7 Steps\n      Welcome → Quick-log → Sleep toggle → Drawer → Nav → Charts → Settings\n      Comprehensive but long. Most users will skip before finishing.","choice":"7-steps","id":null,"timestamp":1774979094947}
+{"type":"screen-added","file":"/Users/rando/v0-infant-tracker-app/.superpowers/brainstorm/30908-1774979055/content/step-flow.html"}
+{"type":"screen-added","file":"/Users/rando/v0-infant-tracker-app/.superpowers/brainstorm/30908-1774979055/content/step-flow-v2.html"}
+{"type":"screen-added","file":"/Users/rando/v0-infant-tracker-app/.superpowers/brainstorm/30908-1774979055/content/tooltip-style.html"}
+{"type":"screen-added","file":"/Users/rando/v0-infant-tracker-app/.superpowers/brainstorm/30908-1774979055/content/welcome-modal.html"}
+{"type":"screen-added","file":"/Users/rando/v0-infant-tracker-app/.superpowers/brainstorm/30908-1774979055/content/welcome-modal-v2.html"}
+{"type":"screen-added","file":"/Users/rando/v0-infant-tracker-app/.superpowers/brainstorm/30908-1774979055/content/waiting.html"}
+{"type":"server-stopped","reason":"owner process exited"}

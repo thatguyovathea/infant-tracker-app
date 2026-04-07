@@ -1,0 +1,92 @@
+<h2>Tooltip Visual Style</h2>
+<p class="subtitle">How should the walkthrough tooltips look on the dark dashboard?</p>
+
+<div class="cards">
+  <div class="card" data-choice="frosted" onclick="toggleSelect(this)">
+    <div class="card-image" style="background: #0f172a; padding: 32px; display: flex; align-items: center; justify-content: center;">
+      <div style="position: relative; width: 280px;">
+        <div style="background: rgba(255,255,255,0.12); backdrop-filter: blur(20px); border: 1px solid rgba(255,255,255,0.15); border-radius: 16px; padding: 20px; color: white;">
+          <div style="font-size: 11px; text-transform: uppercase; letter-spacing: 1.5px; color: rgba(255,255,255,0.5); margin-bottom: 8px;">Step 2 of 7</div>
+          <div style="font-weight: 600; font-size: 16px; margin-bottom: 6px;">Quick Logging</div>
+          <div style="font-size: 13px; color: rgba(255,255,255,0.7); line-height: 1.5;">One tap to log a feeding, sleep, or diaper change. Tap Sleep once to start, tap again to end.</div>
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 16px;">
+            <div style="font-size: 12px; color: rgba(255,255,255,0.4); cursor: pointer;">Skip tour</div>
+            <div style="background: #818CF8; color: white; padding: 8px 20px; border-radius: 8px; font-size: 13px; font-weight: 600;">Next</div>
+          </div>
+          <div style="display: flex; gap: 6px; justify-content: center; margin-top: 14px;">
+            <div style="width: 6px; height: 6px; border-radius: 50%; background: rgba(255,255,255,0.3);"></div>
+            <div style="width: 6px; height: 6px; border-radius: 50%; background: #818CF8;"></div>
+            <div style="width: 6px; height: 6px; border-radius: 50%; background: rgba(255,255,255,0.3);"></div>
+            <div style="width: 6px; height: 6px; border-radius: 50%; background: rgba(255,255,255,0.3);"></div>
+            <div style="width: 6px; height: 6px; border-radius: 50%; background: rgba(255,255,255,0.3);"></div>
+            <div style="width: 6px; height: 6px; border-radius: 50%; background: rgba(255,255,255,0.3);"></div>
+            <div style="width: 6px; height: 6px; border-radius: 50%; background: rgba(255,255,255,0.3);"></div>
+          </div>
+        </div>
+        <div style="position: absolute; bottom: -8px; left: 50%; transform: translateX(-50%); width: 16px; height: 16px; background: rgba(255,255,255,0.12); border: 1px solid rgba(255,255,255,0.15); border-top: none; border-left: none; transform: translateX(-50%) rotate(45deg);"></div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>A: Frosted Glass</h3>
+      <p>Matches the app's dark theme. Translucent with blur backdrop. Subtle and native-feeling.</p>
+    </div>
+  </div>
+
+  <div class="card" data-choice="solid" onclick="toggleSelect(this)">
+    <div class="card-image" style="background: #0f172a; padding: 32px; display: flex; align-items: center; justify-content: center;">
+      <div style="position: relative; width: 280px;">
+        <div style="background: #1e1b4b; border: 1px solid #4338ca; border-radius: 16px; padding: 20px; color: white; box-shadow: 0 8px 32px rgba(99, 102, 241, 0.2);">
+          <div style="font-size: 11px; text-transform: uppercase; letter-spacing: 1.5px; color: #A5B4FC; margin-bottom: 8px;">Step 2 of 7</div>
+          <div style="font-weight: 600; font-size: 16px; margin-bottom: 6px;">Quick Logging</div>
+          <div style="font-size: 13px; color: rgba(255,255,255,0.7); line-height: 1.5;">One tap to log a feeding, sleep, or diaper change. Tap Sleep once to start, tap again to end.</div>
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 16px;">
+            <div style="font-size: 12px; color: rgba(255,255,255,0.4); cursor: pointer;">Skip tour</div>
+            <div style="background: #6366F1; color: white; padding: 8px 20px; border-radius: 8px; font-size: 13px; font-weight: 600;">Next</div>
+          </div>
+          <div style="display: flex; gap: 6px; justify-content: center; margin-top: 14px;">
+            <div style="width: 6px; height: 6px; border-radius: 50%; background: rgba(255,255,255,0.3);"></div>
+            <div style="width: 6px; height: 6px; border-radius: 50%; background: #6366F1;"></div>
+            <div style="width: 6px; height: 6px; border-radius: 50%; background: rgba(255,255,255,0.3);"></div>
+            <div style="width: 6px; height: 6px; border-radius: 50%; background: rgba(255,255,255,0.3);"></div>
+            <div style="width: 6px; height: 6px; border-radius: 50%; background: rgba(255,255,255,0.3);"></div>
+            <div style="width: 6px; height: 6px; border-radius: 50%; background: rgba(255,255,255,0.3);"></div>
+            <div style="width: 6px; height: 6px; border-radius: 50%; background: rgba(255,255,255,0.3);"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>B: Solid Indigo</h3>
+      <p>Strong contrast against the dark dashboard. Clearly stands out as an overlay. Bold and intentional.</p>
+    </div>
+  </div>
+
+  <div class="card" data-choice="lavender" onclick="toggleSelect(this)">
+    <div class="card-image" style="background: #0f172a; padding: 32px; display: flex; align-items: center; justify-content: center;">
+      <div style="position: relative; width: 280px;">
+        <div style="background: linear-gradient(135deg, #e8dff0, #d4c4e0); border-radius: 16px; padding: 20px; color: #1e1b4b; box-shadow: 0 8px 32px rgba(0,0,0,0.3);">
+          <div style="font-size: 11px; text-transform: uppercase; letter-spacing: 1.5px; color: #6B5B7B; margin-bottom: 8px;">Step 2 of 7</div>
+          <div style="font-weight: 600; font-size: 16px; margin-bottom: 6px;">Quick Logging</div>
+          <div style="font-size: 13px; color: #4A3D5C; line-height: 1.5;">One tap to log a feeding, sleep, or diaper change. Tap Sleep once to start, tap again to end.</div>
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 16px;">
+            <div style="font-size: 12px; color: #8B7BA0; cursor: pointer;">Skip tour</div>
+            <div style="background: #7C3AED; color: white; padding: 8px 20px; border-radius: 8px; font-size: 13px; font-weight: 600;">Next</div>
+          </div>
+          <div style="display: flex; gap: 6px; justify-content: center; margin-top: 14px;">
+            <div style="width: 6px; height: 6px; border-radius: 50%; background: rgba(124,58,237,0.3);"></div>
+            <div style="width: 6px; height: 6px; border-radius: 50%; background: #7C3AED;"></div>
+            <div style="width: 6px; height: 6px; border-radius: 50%; background: rgba(124,58,237,0.3);"></div>
+            <div style="width: 6px; height: 6px; border-radius: 50%; background: rgba(124,58,237,0.3);"></div>
+            <div style="width: 6px; height: 6px; border-radius: 50%; background: rgba(124,58,237,0.3);"></div>
+            <div style="width: 6px; height: 6px; border-radius: 50%; background: rgba(124,58,237,0.3);"></div>
+            <div style="width: 6px; height: 6px; border-radius: 50%; background: rgba(124,58,237,0.3);"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>C: Lavender (Brand Match)</h3>
+      <p>Matches the app icon palette. Light tooltip on dark background creates strong contrast. Feels on-brand.</p>
+    </div>
+  </div>
+</div>

@@ -2,16 +2,16 @@
 
 import { useState, useEffect, useCallback } from "react"
 import { useRouter } from "next/navigation"
-import { createClient } from "@/lib/supabase/client"
 import { getAuthedClient } from "@/lib/supabase/authed-client"
+import { useAuthFamily } from "@/lib/use-auth-family"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Separator } from "@/components/ui/separator"
 import { format, isToday, isYesterday, differenceInMinutes } from "date-fns"
+import type { Baby } from "@/app/dashboard/types"
 
 type Filter = "all" | "feeding" | "sleep" | "diaper" | "growth"
-type Baby = { id: string; name: string }
 
 type LogItem = {
   id: string
@@ -103,14 +103,13 @@ function groupByDate(items: LogItem[]): { dateKey: string; label: string; items:
 
 export default function HistoryPage() {
   const router = useRouter()
+  const { babies, familyId, loading: authLoading } = useAuthFamily({ skipProfile: true })
   const [filter, setFilter] = useState<Filter>("all")
   const [selectedBabyId, setSelectedBabyId] = useState<string | null>(null)
-  const [babies, setBabies] = useState<Baby[]>([])
   const [items, setItems] = useState<LogItem[]>([])
   const [loading, setLoading] = useState(true)
   const [loadingMore, setLoadingMore] = useState(false)
   const [hasMore, setHasMore] = useState(true)
-  const [familyId, setFamilyId] = useState<string | null>(null)
   const [offset, setOffset] = useState(0)
   const [expandedId, setExpandedId] = useState<string | null>(null)
   const [deletingId, setDeletingId] = useState<string | null>(null)
@@ -177,30 +176,11 @@ export default function HistoryPage() {
   }, [])
 
   useEffect(() => {
-    async function init() {
-      const supabase = createClient()
-      const { data: { session } } = await supabase.auth.getSession()
-      if (!session) { router.replace("/login"); return }
-
-      const client = await getAuthedClient()
-      if (!client) { router.replace("/login"); return }
-
-      const { data: membership } = await client
-        .from("family_members").select("family_id")
-        .eq("user_id", session.user.id).limit(1).maybeSingle()
-      if (!membership) { router.replace("/onboarding"); return }
-
-      const fid = membership.family_id
-      setFamilyId(fid)
-
-      const { data: babiesData } = await client.from("babies").select("id, name").eq("family_id", fid).order("created_at")
-      setBabies(babiesData ?? [])
-
-      await fetchPage(fid, "all", null, 0, false)
-      setLoading(false)
-    }
-    init().catch(() => setLoading(false))
-  }, [router, fetchPage])
+    if (authLoading || !familyId) return
+    fetchPage(familyId, "all", null, 0, false)
+      .then(() => setLoading(false))
+      .catch(() => setLoading(false))
+  }, [authLoading, familyId, fetchPage])
 
   async function handleFilterChange(f: Filter) {
     if (f === filter) return

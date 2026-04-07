@@ -324,7 +324,7 @@ function EditForm() {
       const client = await getAuthedClient()
       if (!client) { router.replace("/login"); return }
 
-      const { data } = await client.from(table).select("*").eq("id", id).maybeSingle()
+      const { data } = await client.from(table).select("*").eq("id", id).limit(1).maybeSingle()
       if (!data) { router.back(); return }
       setRecord(data)
       setLoading(false)

@@ -16,20 +16,18 @@ test.describe("Dashboard", () => {
 
   test("loads and shows quick-log circles", async ({ page }) => {
     await page.goto("/dashboard")
-    await page.waitForLoadState("networkidle")
 
-    // The dashboard has three quick-log circle buttons labeled Eat / Sleep / Change
-    await expect(page.getByText(/eat/i)).toBeVisible({ timeout: 10_000 })
+    // Wait for actual UI instead of networkidle (realtime WebSocket never idles)
+    await expect(page.getByText(/eat/i)).toBeVisible({ timeout: 15_000 })
     await expect(page.getByText(/sleep/i).first()).toBeVisible()
     await expect(page.getByText(/change/i)).toBeVisible()
   })
 
   test("quick-log feeding shows success flash", async ({ page }) => {
     await page.goto("/dashboard")
-    await page.waitForLoadState("networkidle")
 
     // Wait for Eat label to confirm circles are rendered
-    await expect(page.getByText(/eat/i)).toBeVisible({ timeout: 10_000 })
+    await expect(page.getByText(/eat/i)).toBeVisible({ timeout: 15_000 })
 
     // The feeding circle button contains the bottle emoji
     const feedBtn = page.locator("button").filter({ hasText: "🍼" }).first()
@@ -42,9 +40,8 @@ test.describe("Dashboard", () => {
 
   test("quick-log sleep toggles sleep timer", async ({ page }) => {
     await page.goto("/dashboard")
-    await page.waitForLoadState("networkidle")
 
-    await expect(page.getByText(/sleep/i).first()).toBeVisible({ timeout: 10_000 })
+    await expect(page.getByText(/sleep/i).first()).toBeVisible({ timeout: 15_000 })
 
     const sleepBtn = page.locator("button").filter({ hasText: "😴" }).first()
     await sleepBtn.click()
@@ -54,9 +51,8 @@ test.describe("Dashboard", () => {
 
   test("quick-log diaper shows success flash", async ({ page }) => {
     await page.goto("/dashboard")
-    await page.waitForLoadState("networkidle")
 
-    await expect(page.getByText(/change/i)).toBeVisible({ timeout: 10_000 })
+    await expect(page.getByText(/change/i)).toBeVisible({ timeout: 15_000 })
 
     const diaperBtn = page.locator("button img[alt='diaper']").first().locator("..")
     await diaperBtn.click()

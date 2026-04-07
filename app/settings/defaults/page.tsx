@@ -66,7 +66,7 @@ export default function DefaultsPage() {
       if (!session) return
       const client = await getAuthedClient()
       if (!client) return
-      const { data } = await client.from("user_preferences").select("quick_prefs").eq("user_id", session.user.id).maybeSingle()
+      const { data } = await client.from("user_preferences").select("quick_prefs").eq("user_id", session.user.id).limit(1).maybeSingle()
       if (data?.quick_prefs) setPrefs({ ...DEFAULT_PREFS, ...data.quick_prefs })
     }
     load()

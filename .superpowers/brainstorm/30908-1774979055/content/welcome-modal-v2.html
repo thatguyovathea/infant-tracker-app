@@ -1,0 +1,34 @@
+<h2>Welcome Modal — Hybrid</h2>
+<p class="subtitle">Full screen with translucent background so the dashboard bleeds through.</p>
+
+<div class="cards">
+  <div class="card" data-choice="hybrid" onclick="toggleSelect(this)">
+    <div class="card-image" style="position: relative; min-height: 440px; overflow: hidden;">
+      <!-- Simulated dashboard behind -->
+      <div style="position: absolute; inset: 0; background: #0f172a; padding: 20px;">
+        <div style="color: rgba(255,255,255,0.6); font-size: 20px; font-weight: 700; margin-bottom: 12px;">Sasha</div>
+        <div style="display: flex; gap: 8px; margin-bottom: 16px;">
+          <div style="flex:1; background: rgba(56,189,248,0.2); border-radius: 12px; padding: 12px; text-align: center; color: rgba(255,255,255,0.5); font-size: 13px;">🍼 0</div>
+          <div style="flex:1; background: rgba(139,92,246,0.2); border-radius: 12px; padding: 12px; text-align: center; color: rgba(255,255,255,0.5); font-size: 13px;">😴 —</div>
+          <div style="flex:1; background: rgba(52,211,153,0.2); border-radius: 12px; padding: 12px; text-align: center; color: rgba(255,255,255,0.5); font-size: 13px;">🧷 0</div>
+        </div>
+        <div style="background: rgba(255,255,255,0.05); border-radius: 12px; height: 80px; margin-bottom: 12px;"></div>
+        <div style="background: rgba(255,255,255,0.05); border-radius: 12px; height: 80px;"></div>
+      </div>
+      <!-- Translucent overlay -->
+      <div style="position: absolute; inset: 0; background: rgba(15, 23, 42, 0.85); backdrop-filter: blur(8px); display: flex; align-items: center; justify-content: center;">
+        <div style="width: 300px; padding: 40px 28px; color: white; text-align: center;">
+          <div style="width: 88px; height: 88px; border-radius: 22px; background: linear-gradient(135deg, #e8dff0, #c4b4d8); margin: 0 auto 24px; display: flex; align-items: center; justify-content: center; font-size: 44px;">🌙</div>
+          <div style="font-size: 26px; font-weight: 700; margin-bottom: 8px;">Welcome to<br>Care Tracking</div>
+          <div style="font-size: 14px; color: rgba(255,255,255,0.6); line-height: 1.5; margin-bottom: 36px;">Track feedings, sleep, and diaper changes — all in one place.</div>
+          <div style="background: #6366F1; color: white; padding: 16px 24px; border-radius: 12px; font-size: 16px; font-weight: 600; cursor: pointer; margin-bottom: 16px;">Let's take a quick tour</div>
+          <div style="font-size: 13px; color: rgba(255,255,255,0.35); cursor: pointer;">Skip, I'll figure it out</div>
+        </div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>Full Screen + Translucent</h3>
+      <p>Dashboard visible behind a frosted dark overlay. Big icon, immersive feel, but the app context shows through.</p>
+    </div>
+  </div>
+</div>

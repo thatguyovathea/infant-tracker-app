@@ -41,5 +41,8 @@ playwright-report/
 .claude/
 .claude-backup/
 
+# App Store screenshot generator (standalone Next.js project)
+appstore-screenshots/
+
 # Supabase temp files
 supabase/.temp/

@@ -4,22 +4,20 @@ import { useState, useEffect, Suspense } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
 import { createClient } from "@/lib/supabase/client"
 import { getAuthedClient } from "@/lib/supabase/authed-client"
+import { useAuthFamily } from "@/lib/use-auth-family"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { format } from "date-fns"
 import { useUnits, lbsToKg, inToCm, weightLabel, lengthLabel } from "@/lib/units"
 
-type Baby = { id: string; name: string }
-
 function GrowthForm() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const preselectedBabyId = searchParams.get("babyId")
   const { units } = useUnits()
+  const { babies, familyId, loading: authLoading } = useAuthFamily({ skipProfile: true })
 
-  const [babies, setBabies] = useState<Baby[]>([])
-  const [familyId, setFamilyId] = useState<string | null>(null)
   const [babyId, setBabyId] = useState<string>("")
   const [measuredAt, setMeasuredAt] = useState(format(new Date(), "yyyy-MM-dd'T'HH:mm"))
   const [weight, setWeight] = useState("")
@@ -28,26 +26,12 @@ function GrowthForm() {
   const [notes, setNotes] = useState("")
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    async function load() {
-      const supabase = createClient()
-      const { data: { session } } = await supabase.auth.getSession()
-      if (!session) { router.replace("/login"); return }
-      const client = await getAuthedClient()
-      if (!client) { router.replace("/login"); return }
-      const { data: m } = await client.from("family_members").select("family_id").eq("user_id", session.user.id).limit(1).maybeSingle()
-      if (!m) { router.replace("/onboarding"); return }
-      setFamilyId(m.family_id)
-      const { data: babiesData } = await client.from("babies").select("id, name").eq("family_id", m.family_id).order("created_at")
-      setBabies(babiesData ?? [])
-      const first = preselectedBabyId ?? babiesData?.[0]?.id ?? ""
-      setBabyId(first)
-      setLoading(false)
+    if (babies.length > 0 && !babyId) {
+      setBabyId(preselectedBabyId ?? babies[0].id)
     }
-    load()
-  }, [router, preselectedBabyId])
+  }, [babies, babyId, preselectedBabyId])
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
@@ -84,7 +68,7 @@ function GrowthForm() {
   const wLabel = weightLabel(units)
   const lLabel = lengthLabel(units)
 
-  if (loading) return (
+  if (authLoading) return (
     <div className="min-h-screen flex items-center justify-center">
       <p className="text-muted-foreground text-sm">Loading...</p>
     </div>

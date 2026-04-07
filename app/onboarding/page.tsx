@@ -30,6 +30,7 @@ export default function OnboardingPage() {
       .from("families")
       .insert({ name, created_by: session.user.id })
       .select()
+      .limit(1)
       .single()
 
     if (familyError) { setError(familyError.message); setLoading(false); return }

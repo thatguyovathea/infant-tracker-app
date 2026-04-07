@@ -1,14 +1,13 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState } from "react"
 import { useRouter } from "next/navigation"
-import { createClient } from "@/lib/supabase/client"
 import { getAuthedClient } from "@/lib/supabase/authed-client"
+import { useAuthFamily } from "@/lib/use-auth-family"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { format, subDays } from "date-fns"
 
-type Baby = { id: string; name: string }
 type Range = 7 | 30 | 90 | 365
 
 const RANGES: { value: Range; label: string }[] = [
@@ -58,32 +57,11 @@ function shareOrDownload(csv: string, filename: string) {
 
 export default function ExportPage() {
   const router = useRouter()
-  const [babies, setBabies] = useState<Baby[]>([])
-  const [familyId, setFamilyId] = useState<string | null>(null)
+  const { babies, familyId, loading } = useAuthFamily({ skipProfile: true })
   const [selectedBabyId, setSelectedBabyId] = useState<string | null>(null)
   const [range, setRange] = useState<Range>(30)
-  const [loading, setLoading] = useState(true)
   const [exporting, setExporting] = useState<string | null>(null) // "feeding" | "sleep" | "diaper" | "all"
   const [exportMsg, setExportMsg] = useState<string | null>(null)
-
-  useEffect(() => {
-    async function load() {
-      const supabase = createClient()
-      const { data: { session } } = await supabase.auth.getSession()
-      if (!session) { router.replace("/login"); return }
-      const client = await getAuthedClient()
-      if (!client) { router.replace("/login"); return }
-      const { data: m } = await client.from("family_members").select("family_id")
-        .eq("user_id", session.user.id).limit(1).maybeSingle()
-      if (!m) { router.replace("/onboarding"); return }
-      setFamilyId(m.family_id)
-      const { data: b } = await client.from("babies").select("id, name")
-        .eq("family_id", m.family_id).order("created_at")
-      setBabies(b ?? [])
-      setLoading(false)
-    }
-    load().catch(() => setLoading(false))
-  }, [router])
 
   async function runExport(type: "feeding" | "sleep" | "diaper" | "all") {
     if (!familyId) return

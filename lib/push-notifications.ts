@@ -1,6 +1,7 @@
 import { PushNotifications } from "@capacitor/push-notifications"
 import { Capacitor } from "@capacitor/core"
 import { createClient } from "./supabase/client"
+import { getAuthedClient } from "./supabase/authed-client"
 
 export async function registerPushNotifications() {
   if (!Capacitor.isNativePlatform()) return
@@ -15,7 +16,9 @@ export async function registerPushNotifications() {
       await saveDeviceToken(token.value)
     })
 
-    PushNotifications.addListener("registrationError", () => {})
+    PushNotifications.addListener("registrationError", (err) => {
+      console.error("Push registration error:", err)
+    })
 
     await PushNotifications.register()
   } catch {
@@ -35,7 +38,13 @@ async function saveDeviceToken(token: string) {
       continue
     }
 
-    await supabase
+    const authed = await getAuthedClient()
+    if (!authed) {
+      await new Promise(r => setTimeout(r, 2000))
+      continue
+    }
+
+    await authed
       .from("device_tokens")
       .upsert(
         { user_id: session.user.id, token, platform: "ios" },

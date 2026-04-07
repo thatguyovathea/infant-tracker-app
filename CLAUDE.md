@@ -97,6 +97,38 @@ App is locked to portrait on iPhone and iPad via `Info.plist` and `capacitor.con
 - Gitleaks pre-commit hook installed
 - Red team score: 38/100 → 72/100 (remaining deductions: CSP unsafe-inline required by Next.js static export, dev-only npm audit vulns in @capacitor/assets)
 
+## Claude Dev Framework (2026-04-02) ✅
+Framework v3.0.0 installed at `.claude/framework/`. Hooks enforce development discipline.
+
+### Security remediations applied:
+- Secure state dir (`~/.claude-dev-framework/state/{hash}/`, mode 700) replaces `/tmp/` markers
+- Persistent audit trail in `.claude/audit/audit.jsonl` (JSON Lines)
+- SHA-256 integrity verification for all hook files (`.integrity-manifest`)
+- `marker-guard.sh` rewritten to block ALL marker creation methods (not just `touch`)
+- New hooks: `secret-scan.sh` (gitleaks/regex), `sast-scan.sh` (semgrep/pattern), `license-scan.sh` (copyleft detection)
+
+### Legal remediations applied:
+- `LEGAL.md` — 6 disclaimers (AI code, data transmission, regulatory, safety-critical, etc.)
+- `THIRD-PARTY-LICENSES.txt` — 208-line CSV of all production dependency licenses
+- Upstream framework updated: LICENSE, README (limitations), CONTRIBUTING (DCO), LEGAL.md, NOTICE
+
+### Actionable error messages (2026-04-02):
+- All 12 hooks with user-facing messages updated with "What this means" + "How to fix" + specific commands
+- Every blocking hook now includes "To disable: remove X from manifest.json/settings.json"
+- Security hooks include step-by-step fix instructions per vulnerability type
+
+### Reviews completed:
+- `security-review-v1.md` — CIO-level security assessment (CONDITIONALLY ACCEPTABLE, 7 must-haves implemented)
+- `legal-review-v1.md` — Attorney-level legal risk analysis (CONDITIONALLY ACCEPTABLE, all remediations implemented)
+- `technical-user-review-v1.md` — Non-developer usability assessment (6.4/10 overall)
+
+### Framework key files:
+- `.claude/framework/hooks/` — 18 hook scripts (13 original + 3 security + integrity manifest generator + mark-evaluated)
+- `.claude/framework/hooks/_helpers.sh` — shared functions (get_state_dir, get_marker_path, write_audit_entry, verify_framework_integrity)
+- `.claude/manifest.json` — framework config (profile: web-api, 14 rules, 11 hooks)
+- `.claude/settings.json` — Claude Code hook registrations
+- `.claude/audit/audit.jsonl` — persistent audit trail
+
 17. **Baby photo avatar** — tappable "edit" link under avatar in edit mode, photo picked from camera roll, resized to 200x200 JPEG, stored in localStorage (no server upload). Falls back to 👶 emoji.
 18. **Privacy policy** — `/privacy` route, no auth required, covers all Apple requirements
 19. **App renamed** — "Infant Tracker" → "Care Tracking" across capacitor config, Info.plist, package.json, layout.tsx
@@ -104,8 +136,38 @@ App is locked to portrait on iPhone and iPad via `Info.plist` and `capacitor.con
 21. **App Store ready** — all metadata, screenshots, pricing, privacy, and build uploaded to App Store Connect. iPhone only (no iPad). Not yet submitted — pending TestFlight beta testing first.
 
 ## What is incomplete / pending ⏳
-- App Store review: v1.0.0 build 2 uploaded, rejected for 5.1.1(v) — account deletion not visible to reviewer. Delete account feature exists in Settings, need screen recording demo for resubmission.
+- App Store review: v1.0.0 build 3 uploaded + attached + resubmitted 2026-04-07, status "Waiting for Review". Build 2 was rejected 5.1.1(v) because it was archived BEFORE the account-deletion commit (76944c5, 2026-04-02 09:26) landed — the binary literally didn't contain the feature. Build 3 has the working delete-account flow (Settings → bottom → "Delete account"). Edge function `delete-account` confirmed deployed (probed endpoint, returned 401 not 404). Reviewer notes updated with delete-account location.
 - Members showing 0 on Family page (display bug, not functional blocker)
+
+## Code cleanup (2026-04-02) ✅
+- **Created `lib/use-auth-family.ts`** — shared hook replacing auth+family+babies boilerplate across 7 pages
+- Refactored: feeding, diaper, sleep, growth, export, trends, history pages
+- Removed dead `captureError()` from `lib/sentry.ts`, empty `hooks/` dir, added `appstore-screenshots/` to `.gitignore`
+- Build clean, 45/49 tests pass (4 pre-existing env failures)
+
+## Red team security audit (2026-04-02)
+Full 4-agent parallel review. RLS is solid — all cross-family access blocked at DB level.
+
+### CRITICAL (fix before App Store):
+- `NSAllowsArbitraryLoads = true` in Info.plist — manual Xcode fix needed
+- Source maps in production — add `productionBrowserSourceMaps: false` to next.config.ts
+
+### HIGH (fix this week):
+- Add `PASSWORD_RECOVERY` event to auth state listener (`lib/supabase/authed-client.ts`)
+- Sanitize Supabase error messages shown to users (all log form pages)
+- Fix CSV `escapeCsv` multiline flag (`/gm`) in `app/export/page.tsx`
+- Add barcode format validation (`/^\d{8,14}$/`) in `lib/product-lookup.ts`
+- Remove/wrap `console.error` calls in production code
+
+### MEDIUM (next sprint):
+- Password re-prompt before account deletion
+- Validate file size/type before baby photo upload (`lib/baby-avatar.ts`)
+- Add X-Frame-Options + Permissions-Policy meta tags (`app/layout.tsx`)
+- Offline queue + dashboard cache store unencrypted PII in localStorage
+- External API data (OpenFoodFacts) unsanitized before cache/render
+
+### Not real issues (downgraded):
+- Edit/delete queries missing client-side `family_id` filter — RLS enforces at DB level, app works correctly
 
 ## Audit completed (2026-03-31) ✅
 Full dead code audit — 54 files deleted, 6,703 lines removed:
@@ -154,6 +216,7 @@ Previous audit (2026-03-13) ✅ — 3 warnings fixed:
 - `lib/barcode-scanner.ts` — `canScan()` check (uses navigator.mediaDevices)
 - `lib/product-lookup.ts` — `lookupFood()` + `lookupGeneral()` with two-tier cache
 - `components/barcode-scanner-modal.tsx` — full-screen camera scanner using @zxing/browser
+- `lib/use-auth-family.ts` — shared hook for auth+family+babies (used by 7+ pages)
 - `lib/supabase/authed-client.ts` — critical auth pattern for Capacitor
 - `lib/offline-queue.ts` — offline queue read/write/sync
 - `lib/session-timeout.ts` — 30-min idle session timeout

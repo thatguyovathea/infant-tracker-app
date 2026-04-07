@@ -4,6 +4,14 @@ import { createClient } from "./client"
 let authedClient: SupabaseClient | null = null
 let cachedToken: string | null = null
 
+// Invalidate cached client when token refreshes or user signs out
+const _unsub = createClient().auth.onAuthStateChange((event) => {
+  if (event === "TOKEN_REFRESHED" || event === "SIGNED_OUT") {
+    authedClient = null
+    cachedToken = null
+  }
+})
+
 /**
  * Returns a Supabase client with the user's access token explicitly set
  * in the Authorization header. Use this for all database mutations until

@@ -4,6 +4,7 @@ import { useState, useEffect, Suspense } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
 import { createClient } from "@/lib/supabase/client"
 import { getAuthedClient } from "@/lib/supabase/authed-client"
+import { useAuthFamily } from "@/lib/use-auth-family"
 import { Button } from "@/components/ui/button"
 import { Label } from "@/components/ui/label"
 import { Input } from "@/components/ui/input"
@@ -21,15 +22,11 @@ const SIDES = [
   { value: "both",  label: "Both"  },
 ]
 
-type Baby = { id: string; name: string }
-
 function FeedingForm() {
   const router = useRouter()
   const searchParams = useSearchParams()
-  const [babies, setBabies] = useState<Baby[]>([])
+  const { babies, familyId, displayName, loading: authLoading } = useAuthFamily()
   const [babyId, setBabyId] = useState("")
-  const [familyId, setFamilyId] = useState<string | null>(null)
-  const [displayName, setDisplayName] = useState("")
   const [feedingType, setFeedingType] = useState(searchParams.get("type") ?? "breast")
   const [side, setSide] = useState("left")
   const [duration, setDuration] = useState("")
@@ -42,26 +39,8 @@ function FeedingForm() {
   const [scanMessage, setScanMessage] = useState(searchParams.get("food_name") ? `Pre-filled: ${searchParams.get("food_name")}` : "")
 
   useEffect(() => {
-    async function load() {
-      const supabase = createClient()
-      const { data: { session } } = await supabase.auth.getSession()
-      if (!session) { router.replace("/login"); return }
-      const client = await getAuthedClient()
-      if (!client) { router.replace("/login"); return }
-      const { data: m } = await client.from("family_members").select("family_id").eq("user_id", session.user.id).limit(1).maybeSingle()
-      if (!m) return
-      setFamilyId(m.family_id)
-      const [{ data: b }, { data: profile }] = await Promise.all([
-        client.from("babies").select("id, name").eq("family_id", m.family_id).order("created_at"),
-        client.from("profiles").select("display_name").eq("id", session.user.id).maybeSingle(),
-      ])
-      const list = b ?? []
-      setBabies(list)
-      if (list.length > 0) setBabyId(list[0].id)
-      setDisplayName(profile?.display_name ?? "Someone")
-    }
-    load()
-  }, [router])
+    if (babies.length > 0 && !babyId) setBabyId(babies[0].id)
+  }, [babies, babyId])
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
@@ -196,7 +175,7 @@ function FeedingForm() {
               </div>
             </CardContent>
             <CardFooter>
-              <Button type="submit" className="w-full" disabled={loading || !familyId || !babyId}>
+              <Button type="submit" className="w-full" disabled={loading || authLoading || !familyId || !babyId}>
                 {loading ? "Saving..." : "Save feeding"}
               </Button>
             </CardFooter>
